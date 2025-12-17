@@ -938,17 +938,27 @@ networks:
 - [x] Add file versioning
 - [x] Set up database migrations
 
-### Phase 3: Web Frontend (Week 3-4)
-- [ ] Design and implement UI components
-- [ ] Create file list/browser view
-- [ ] Implement markdown editor (CodeMirror 6) with split-view preview
-- [ ] Set up react-markdown for preview rendering
-- [ ] Add file creation/editing interface
-- [ ] Implement folder navigation
+### Phase 3: Web Frontend (Mock Data UI) (Week 3-4)
+- [x] Design and implement UI components
+- [x] Create file list/browser view
+- [x] Implement markdown editor (CodeMirror 6) with split-view preview
+- [x] Set up react-markdown for preview rendering
+- [x] Add file creation/editing interface
+- [x] Implement folder navigation
 - [ ] Add search functionality (Postgres `tsvector` full-text search)
 - [ ] Implement tag system
+- Note: Uses mock data for folders/files; real API wiring moves to Phase 4.
 
-### Phase 4: Mobile App (Week 4-5)
+### Phase 4: Web Frontend API Integration (Week 4-5)
+- [ ] Replace mock folder/file data with live API calls
+- [ ] Wire file CRUD (list/create/update/delete) to `/api/files`
+- [ ] Hook folder navigation to `/api/folders` tree
+- [ ] Connect editor Save/New actions to persistence and versioning
+- [ ] Implement search against `/api/search`
+- [ ] Surface tags from `/api/tags` and enable add/remove
+- [ ] Handle auth state (NextAuth/JWT) in client requests
+
+### Phase 5: Mobile App (Week 5-6)
 - [ ] Initialize Expo project
 - [ ] Set up navigation
 - [ ] Create file list screen
@@ -958,14 +968,14 @@ networks:
 - [ ] Implement sync mechanism
 - [ ] Add authentication flow
 
-### Phase 5: Advanced Features (Week 5-6)
+### Phase 6: Advanced Features (Week 6-7)
 - [ ] Real-time sync (SSE or WebSockets)
 - [ ] File version history UI
 - [ ] Link between files (wiki-style)
 - [ ] File attachments support
 - [ ] Export/import functionality
 
-### Phase 6: Polish & Deployment (Week 6-7)
+### Phase 7: Polish & Deployment (Week 7-8)
 - [ ] Performance optimization
 - [ ] Error handling and logging
 - [ ] Testing (unit, integration, E2E)
@@ -1098,11 +1108,11 @@ networks:
 
 ## Next Steps
 
-1. **Phase 3 - Web Frontend**: Build the UI with React, implement markdown editor (CodeMirror 6), and create file browsing interface
-2. **Phase 4 - Mobile App**: Set up Expo app with authentication and file management
-3. **Phase 5 - Advanced Features**: Real-time sync, internal links, export functionality
+1. **Phase 4 - Web Frontend API Integration**: Replace mock data with live API wiring for folders, files, search, and tags
+2. **Phase 5 - Mobile App**: Set up Expo app with authentication and file management
+3. **Phase 6 - Advanced Features**: Real-time sync, internal links, export functionality
 
 ---
 
 **Last Updated:** 2025-12-17
-**Status:** Phase 1 & 2 Complete (Monorepo Init + Core Backend). Ready for Phase 3 (Web Frontend).
+**Status:** Phase 3 Complete (Mock Data Web UI). Next: Phase 4 (Web Frontend API Integration).
