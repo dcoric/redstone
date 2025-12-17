@@ -1,0 +1,23 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "jsx": "react-native",
+    "baseUrl": ".",
+    "paths": {
+      "@redstone/shared": [
+        "../../packages/shared/src"
+      ],
+      "@redstone/api-client": [
+        "../../packages/api-client/src"
+      ],
+      "@redstone/markdown": [
+        "../../packages/markdown/src"
+      ]
+    }
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".expo/types/**/*.ts"
+  ]
+}

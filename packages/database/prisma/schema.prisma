@@ -1,0 +1,104 @@
+// Prisma schema for Redstone knowledge management app
+// Database: PostgreSQL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String   // Hashed password
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  files     File[]
+  folders   Folder[]
+  tags      Tag[]
+
+  @@map("users")
+}
+
+model Folder {
+  id        String    @id @default(cuid())
+  name      String
+  parentId  String?   // For nested folders
+  userId    String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime? // For soft deletes (sync)
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent    Folder?   @relation("FolderTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children  Folder[]  @relation("FolderTree")
+  files     File[]
+
+  @@index([userId])
+  @@index([userId, parentId])
+  @@map("folders")
+}
+
+model File {
+  id          String        @id @default(cuid())
+  title       String
+  content     String        @db.Text // Markdown content
+  folderId    String?
+  userId      String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  deletedAt   DateTime?     // For soft deletes (sync)
+  lastSynced  DateTime      @default(now())
+
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  folder      Folder?       @relation(fields: [folderId], references: [id], onDelete: SetNull)
+  versions    FileVersion[]
+  tags        FileTag[]
+
+  @@index([userId, folderId])
+  @@index([userId, updatedAt])
+  @@map("files")
+}
+
+model FileVersion {
+  id        String   @id @default(cuid())
+  fileId    String
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+
+  file      File     @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  @@index([fileId, createdAt])
+  @@map("file_versions")
+}
+
+model Tag {
+  id        String    @id @default(cuid())
+  name      String
+  userId    String
+  createdAt DateTime  @default(now())
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  files     FileTag[]
+
+  @@unique([name, userId])
+  @@index([userId])
+  @@map("tags")
+}
+
+model FileTag {
+  fileId    String
+  tagId     String
+  createdAt DateTime @default(now())
+
+  file      File     @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([fileId, tagId])
+  @@map("file_tags")
+}

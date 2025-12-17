@@ -1,0 +1,39 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "./*"
+      ],
+      "@redstone/shared": [
+        "../../packages/shared/src"
+      ],
+      "@redstone/api-client": [
+        "../../packages/api-client/src"
+      ],
+      "@redstone/markdown": [
+        "../../packages/markdown/src"
+      ],
+      "@redstone/database": [
+        "../../packages/database/src"
+      ]
+    },
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts",
+    "**/*.mts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}
