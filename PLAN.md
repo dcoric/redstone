@@ -925,8 +925,8 @@ networks:
 - [x] Configure package.json for each shared package
 - [x] Set up TypeScript path aliases
 - [x] Set up PostgreSQL database (Docker Compose)
-- [ ] Configure Prisma schema in `packages/database`
-- [ ] Set up database migrations
+- [x] Configure Prisma schema in `packages/database`
+- [x] Set up database migrations
 - [x] Test workspace linking and imports
 - [x] Set up Docker development environment (docker-compose.yml)
 - [x] Configure development scripts (dev, build, test, lint)
@@ -945,9 +945,7 @@ networks:
 - [ ] Set up react-markdown for preview rendering
 - [ ] Add file creation/editing interface
 - [ ] Implement folder navigation
-- [ ] Implement folder navigation
 - [ ] Add search functionality (Postgres `tsvector` full-text search)
-- [ ] Implement tag system
 - [ ] Implement tag system
 
 ### Phase 4: Mobile App (Week 4-5)
@@ -1108,4 +1106,3 @@ networks:
 
 **Last Updated:** 2025-12-17
 **Status:** Phase 1 & 2 Complete (Monorepo Init + Core Backend). Ready for Phase 3 (Web Frontend).
-
