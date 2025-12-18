@@ -136,20 +136,40 @@ pnpm lint             # Lint all packages
   - Incremental sync for mobile
   - Change tracking since timestamp
 
+### Implemented (Frontend) ✅
+
+- **Authentication UI**
+  - Login and signup pages
+  - Session management with NextAuth
+  - Route protection middleware
+  - User menu with logout
+
+- **API Client & Hooks**
+  - Typed API client with authenticated requests
+  - SWR hooks for data fetching (useFiles, useFolders, useAuth)
+  - Automatic cookie handling for NextAuth sessions
+
+- **UI Components**
+  - File browser interface
+  - Markdown editor with live preview (CodeMirror 6)
+  - Folder navigation sidebar
+  - Search interface (UI ready)
+
 ### Planned 🚧
 
-- **Web Frontend** (Phase 3)
-  - File browser interface
-  - Markdown editor with live preview
-  - Folder navigation
-  - Search interface
+- **Web Frontend** (Phase 4 - In Progress)
+  - Replace mock data with live API calls
+  - Wire file CRUD operations
+  - Connect folder navigation to API
+  - Implement search functionality
+  - Add tag management UI
 
-- **Mobile App** (Phase 4)
+- **Mobile App** (Phase 5)
   - Expo React Native app
   - Offline support
   - Mobile-optimized editor
 
-- **Advanced Features** (Phase 5)
+- **Advanced Features** (Phase 6)
   - Real-time sync (WebSockets/SSE)
   - Internal linking between files
   - File attachments
@@ -188,9 +208,12 @@ See [packages/database/prisma/schema.prisma](packages/database/prisma/schema.pri
 
 ✅ **Phase 1 Complete**: Monorepo setup
 ✅ **Phase 2 Complete**: Core backend API
-🚧 **Phase 3 In Progress**: Web frontend
-⏳ **Phase 4 Planned**: Mobile app
-⏳ **Phase 5 Planned**: Advanced features
+✅ **Phase 3 Complete**: Web frontend UI components
+🚧 **Phase 4 In Progress**: Web frontend API integration
+  - ✅ Authentication flow and API client setup
+  - ⏳ Data integration (replacing mock data)
+⏳ **Phase 5 Planned**: Mobile app
+⏳ **Phase 6 Planned**: Advanced features
 
 See [PLAN.md](PLAN.md) for detailed implementation plan and progress.
 

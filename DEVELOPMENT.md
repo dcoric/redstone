@@ -88,6 +88,56 @@ curl -X GET http://localhost:3000/api/folders \
   -H "Authorization: Bearer $TOKEN" | jq
 ```
 
+### Working with Authentication
+
+#### Client-Side Authentication
+```typescript
+// Use the useAuth hook in client components
+import { useAuth } from '@/lib/hooks/use-auth';
+
+function MyComponent() {
+  const { user, isAuthenticated, isLoading, signOut } = useAuth();
+  
+  if (isLoading) return <div>Loading...</div>;
+  if (!isAuthenticated) return <div>Please sign in</div>;
+  
+  return <div>Welcome, {user?.email}</div>;
+}
+```
+
+#### Making Authenticated API Calls
+```typescript
+// Use SWR hooks for data fetching
+import { useFiles } from '@/lib/hooks/use-files';
+import { useFolders } from '@/lib/hooks/use-folders';
+
+function FileList() {
+  const { files, isLoading, mutate } = useFiles();
+  // files are automatically fetched with authentication
+}
+```
+
+#### Direct API Client Usage
+```typescript
+// For mutations (create, update, delete)
+import { filesApi } from '@/lib/api-client';
+
+// Create a file
+const newFile = await filesApi.create({
+  title: 'My Note',
+  content: '# Hello',
+});
+
+// Update a file
+await filesApi.update(fileId, {
+  title: 'Updated Title',
+  content: 'Updated content',
+});
+
+// Delete a file
+await filesApi.delete(fileId);
+```
+
 ### Adding New API Endpoints
 
 1. Create route file in `apps/web/app/api/[your-endpoint]/route.ts`
@@ -111,6 +161,22 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({ data: 'your data' });
 }
 ```
+4. Add corresponding function to `lib/api-client.ts` if needed
+5. Create SWR hook in `lib/hooks/` if it's a data-fetching endpoint
+
+### Authentication Pages
+
+#### Sign In
+- **Route**: `/auth/signin`
+- **File**: `apps/web/app/auth/signin/page.tsx`
+- Uses NextAuth credentials provider
+- Automatically redirects authenticated users to home
+
+#### Sign Up
+- **Route**: `/auth/signup`
+- **File**: `apps/web/app/auth/signup/page.tsx`
+- Creates new user account
+- Automatically signs in after registration
 
 ### Working with Shared Packages
 
@@ -202,6 +268,27 @@ rm -rf apps/web/.next
 
 # Restart dev server
 pnpm dev:web
+```
+
+#### Authentication Issues
+```bash
+# Check environment variables
+# Ensure .env.local has:
+# NEXTAUTH_SECRET=your-secret-key
+# NEXTAUTH_URL=http://localhost:3000
+# DATABASE_URL=postgresql://...
+
+# Clear NextAuth cookies
+# In browser DevTools: Application > Cookies > Delete all localhost cookies
+
+# Check if user exists in database
+pnpm --filter @redstone/database db:studio
+# Navigate to users table
+
+# Test authentication endpoint
+curl -X POST http://localhost:3000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@redstone.app","password":"password123"}'
 ```
 
 ## Code Style

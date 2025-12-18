@@ -950,13 +950,18 @@ networks:
 - Note: Uses mock data for folders/files; real API wiring moves to Phase 4.
 
 ### Phase 4: Web Frontend API Integration (Week 4-5)
+- [x] Create API client utilities with authenticated request handling
+- [x] Set up SWR hooks for data fetching (useFiles, useFolders)
+- [x] Create login/signup pages with NextAuth integration
+- [x] Add authentication state management (useAuth hook)
+- [x] Implement route protection middleware
+- [x] Add logout functionality to UI
 - [ ] Replace mock folder/file data with live API calls
 - [ ] Wire file CRUD (list/create/update/delete) to `/api/files`
 - [ ] Hook folder navigation to `/api/folders` tree
 - [ ] Connect editor Save/New actions to persistence and versioning
 - [ ] Implement search against `/api/search`
 - [ ] Surface tags from `/api/tags` and enable add/remove
-- [ ] Handle auth state (NextAuth/JWT) in client requests
 
 ### Phase 5: Mobile App (Week 5-6)
 - [ ] Initialize Expo project
@@ -1106,13 +1111,36 @@ networks:
 - **Sync**: `GET /api/sync?since=timestamp` - Mobile sync endpoint with incremental updates
 - **Soft Deletes**: All deletions are soft (preserve data for sync)
 
+## Phase 4 Implementation Details (In Progress)
+
+### Authentication Flow ✅
+- **API Client**: Created `lib/api-client.ts` with typed API functions for all endpoints
+- **SWR Hooks**: Implemented `useFiles`, `useFolders`, and `useAuth` hooks for data fetching
+- **Login Page**: `/auth/signin` with NextAuth credentials provider
+- **Signup Page**: `/auth/signup` with automatic sign-in after registration
+- **Session Management**: SessionProvider wrapper in root layout
+- **Route Protection**: Middleware to protect routes and redirect unauthenticated users
+- **User Menu**: Logout functionality in header with user info display
+- **Location**: 
+  - [apps/web/lib/api-client.ts](apps/web/lib/api-client.ts)
+  - [apps/web/lib/hooks/](apps/web/lib/hooks/)
+  - [apps/web/app/auth/](apps/web/app/auth/)
+  - [apps/web/middleware.ts](apps/web/middleware.ts)
+
+### Remaining Tasks
+- Replace mock data in FileList and Sidebar components with real API calls
+- Wire up file creation, editing, and deletion
+- Implement folder navigation and filtering
+- Connect search functionality
+- Add tag management UI
+
 ## Next Steps
 
-1. **Phase 4 - Web Frontend API Integration**: Replace mock data with live API wiring for folders, files, search, and tags
+1. **Phase 4 (Continue) - Complete Frontend Integration**: Replace mock data with live API wiring for folders, files, search, and tags
 2. **Phase 5 - Mobile App**: Set up Expo app with authentication and file management
 3. **Phase 6 - Advanced Features**: Real-time sync, internal links, export functionality
 
 ---
 
 **Last Updated:** 2025-12-17
-**Status:** Phase 3 Complete (Mock Data Web UI). Next: Phase 4 (Web Frontend API Integration).
+**Status:** Phase 4 In Progress (Authentication & API Client Complete). Next: Complete frontend data integration.
