@@ -162,7 +162,34 @@ export async function GET(request: NextRequest) {
 }
 ```
 4. Add corresponding function to `lib/api-client.ts` if needed
-5. Create SWR hook in `lib/hooks/` if it's a data-fetching endpoint
+5. Add types to `lib/types.ts` for request/response
+6. Create SWR hook in `lib/hooks/` if it's a data-fetching endpoint
+
+### Type System
+
+All API types are centralized in `apps/web/lib/types.ts`:
+
+```typescript
+// Import types
+import type { File, Folder, Tag, FilesListResponse } from '@/lib/types';
+
+// Use in components
+const { files } = useFiles(); // files is File[]
+
+// Use in API client functions
+const response = await filesApi.list(); // FilesListResponse
+```
+
+**Key types available:**
+- Database models: `User`, `File`, `Folder`, `Tag`, `FileVersion`
+- API responses: `FilesListResponse`, `FileResponse`, `FoldersListResponse`, etc.
+- Request payloads: `CreateFileRequest`, `UpdateFileRequest`, etc.
+
+**Best practices:**
+- Never use `any` - always define proper types
+- API responses should have dedicated response types
+- Request payloads should have dedicated request types
+- Update `lib/types.ts` when adding new API endpoints
 
 ### Authentication Pages
 
