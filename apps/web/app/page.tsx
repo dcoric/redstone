@@ -1,10 +1,11 @@
 "use client"
 
+import * as React from "react"
 import { FileList } from "@/components/features/file-browser/file-list"
 import { Sidebar } from "@/components/features/file-browser/sidebar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Search, Plus, User, LogOut } from "lucide-react"
+import { Search, Plus, User, LogOut, Loader2 } from "lucide-react"
 import { useAuth } from "@/lib/hooks/use-auth"
 import {
   DropdownMenu,
@@ -15,10 +16,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useRouter } from "next/navigation"
+import { filesApi } from "@/lib/api-client"
+import { useFiles } from "@/lib/hooks/use-files"
 
 export default function Home() {
   const { user, signOut } = useAuth()
   const router = useRouter()
+  const { mutate } = useFiles()
+  const [isCreating, setIsCreating] = React.useState(false)
+  const [selectedFolderId, setSelectedFolderId] = React.useState<string | null>(null)
 
   const handleSignOut = async () => {
     await signOut({ redirect: false })
@@ -26,9 +32,27 @@ export default function Home() {
     router.refresh()
   }
 
+  const handleNewFile = async () => {
+    setIsCreating(true)
+    try {
+      const response = await filesApi.create({
+        title: "Untitled",
+        content: "# Untitled\n\nStart writing your markdown here...",
+        folderId: selectedFolderId || undefined,
+      })
+      await mutate() // Refresh file list
+      router.push(`/files/${response.file.id}`)
+    } catch (error) {
+      console.error("Failed to create file:", error)
+      alert("Failed to create file. Please try again.")
+    } finally {
+      setIsCreating(false)
+    }
+  }
+
   return (
     <div className="flex h-screen bg-background">
-      <Sidebar />
+      <Sidebar onFolderSelect={setSelectedFolderId} />
       <main className="flex flex-1 flex-col overflow-hidden">
         <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-6">
           <div className="flex flex-1 items-center gap-4">
@@ -42,9 +66,22 @@ export default function Home() {
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <Button size="sm">
-              <Plus className="mr-2 h-4 w-4" />
-              New File
+            <Button 
+              size="sm" 
+              onClick={handleNewFile}
+              disabled={isCreating}
+            >
+              {isCreating ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Creating...
+                </>
+              ) : (
+                <>
+                  <Plus className="mr-2 h-4 w-4" />
+                  New File
+                </>
+              )}
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -74,7 +111,7 @@ export default function Home() {
           </div>
         </header>
         <div className="flex-1 overflow-auto p-4 sm:p-6">
-          <FileList />
+          <FileList folderId={selectedFolderId} />
         </div>
       </main>
     </div>

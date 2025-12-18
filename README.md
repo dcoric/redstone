@@ -150,19 +150,35 @@ pnpm lint             # Lint all packages
   - Automatic cookie handling for NextAuth sessions
 
 - **UI Components**
-  - File browser interface
+  - File browser interface with real-time data
   - Markdown editor with live preview (CodeMirror 6)
-  - Folder navigation sidebar
+  - Folder navigation sidebar with tree structure
+  - File creation, editing, and deletion
+  - Folder-based file filtering
   - Search interface (UI ready)
+
+### Implemented (Data Integration) ✅
+
+- **File Operations**
+  - Create new files with "New File" button
+  - Load and edit files in markdown editor
+  - Save file changes with auto-detection of unsaved changes
+  - Delete files with confirmation dialog
+  - Navigate to files by clicking file cards
+  - Real-time file list updates
+
+- **Folder Integration**
+  - Load folder tree from API
+  - Filter files by selected folder
+  - Display file counts per folder
+  - "All Files" view for root level
 
 ### Planned 🚧
 
-- **Web Frontend** (Phase 4 - In Progress)
-  - Replace mock data with live API calls
-  - Wire file CRUD operations
-  - Connect folder navigation to API
+- **Web Frontend** (Remaining Features)
   - Implement search functionality
   - Add tag management UI
+  - Folder creation/deletion UI
 
 - **Mobile App** (Phase 5)
   - Expo React Native app
@@ -209,16 +225,20 @@ See [packages/database/prisma/schema.prisma](packages/database/prisma/schema.pri
 ✅ **Phase 1 Complete**: Monorepo setup
 ✅ **Phase 2 Complete**: Core backend API
 ✅ **Phase 3 Complete**: Web frontend UI components
-🚧 **Phase 4 In Progress**: Web frontend API integration
+✅ **Phase 4 Complete**: Web frontend API integration
   - ✅ Authentication & infrastructure (production-ready)
     - Full type safety (zero `any` types)
     - SWR hooks and configuration
     - NextAuth v5 compatible middleware
     - Error boundaries
     - Build passing with zero errors
-  - ⏳ Data integration (wire UI to API endpoints)
+  - ✅ Data integration (wire UI to API endpoints)
+    - File CRUD operations fully functional
+    - Folder navigation connected to API
+    - Real-time data fetching and updates
+    - Loading and error states
 ⏳ **Phase 5 Planned**: Mobile app
-⏳ **Phase 6 Planned**: Advanced features
+⏳ **Phase 6 Planned**: Advanced features (search, tags UI, folder management)
 
 See [PLAN.md](PLAN.md) for detailed implementation plan and [IMPROVEMENTS.md](IMPROVEMENTS.md) for recent code quality improvements.
 

@@ -27,6 +27,11 @@ export function MarkdownEditor({
     const [content, setContent] = React.useState(initialContent)
     const [isPreview, setIsPreview] = React.useState(false) // For mobile or toggle
 
+    // Update content when initialContent changes (e.g., when loading a different file)
+    React.useEffect(() => {
+        setContent(initialContent)
+    }, [initialContent])
+
     const handleChange = React.useCallback(
         (value: string) => {
             setContent(value)

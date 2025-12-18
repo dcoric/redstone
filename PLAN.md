@@ -956,10 +956,10 @@ networks:
 - [x] Add authentication state management (useAuth hook)
 - [x] Implement route protection middleware
 - [x] Add logout functionality to UI
-- [ ] Replace mock folder/file data with live API calls
-- [ ] Wire file CRUD (list/create/update/delete) to `/api/files`
-- [ ] Hook folder navigation to `/api/folders` tree
-- [ ] Connect editor Save/New actions to persistence and versioning
+- [x] Replace mock folder/file data with live API calls
+- [x] Wire file CRUD (list/create/update/delete) to `/api/files`
+- [x] Hook folder navigation to `/api/folders` tree
+- [x] Connect editor Save/New actions to persistence and versioning
 - [ ] Implement search against `/api/search`
 - [ ] Surface tags from `/api/tags` and enable add/remove
 
@@ -1111,7 +1111,7 @@ networks:
 - **Sync**: `GET /api/sync?since=timestamp` - Mobile sync endpoint with incremental updates
 - **Soft Deletes**: All deletions are soft (preserve data for sync)
 
-## Phase 4 Implementation Details (In Progress)
+## Phase 4 Implementation Details (Core Complete ✅)
 
 ### Authentication & Infrastructure ✅ (Complete)
 
@@ -1151,23 +1151,83 @@ networks:
 #### Build Status
 ✅ Production build passing with zero TypeScript errors
 
-### Remaining Tasks (Data Integration)
-- [ ] Replace mock data in FileList component with `useFiles()` hook
-- [ ] Replace mock data in Sidebar component with `useFolders()` hook
-- [ ] Wire up "New File" button to `filesApi.create()`
-- [ ] Connect file editor to `filesApi.update()` and `filesApi.get()`
-- [ ] Implement file deletion with `filesApi.delete()`
+### Data Integration ✅ (Complete)
+
+#### File Operations
+- **FileList Component**: Replaced mock data with `useFiles()` hook
+  - Real-time file loading with loading states
+  - Error handling with user-friendly messages
+  - Empty state when no files exist
+  - Clickable file cards that navigate to editor
+  - File deletion with confirmation dialog
+  - Automatic refresh after mutations
+
+- **File Editor Page**: Fully connected to API
+  - Loads file content using `useFile(id)` hook
+  - Editable title with inline editing
+  - Markdown editor with live preview
+  - Save functionality with `filesApi.update()`
+  - Unsaved changes detection
+  - Loading and error states
+  - Auto-refresh after save
+
+- **New File Creation**: "New File" button wired up
+  - Creates file with `filesApi.create()`
+  - Navigates to editor after creation
+  - Supports folder context for new files
+  - Loading state during creation
+
+#### Folder Integration
+- **Sidebar Component**: Replaced mock data with `useFolders()` hook
+  - Loads folder tree from API
+  - Builds nested folder structure
+  - "All Files" option for root level
+  - Folder selection with visual feedback
+  - File counts displayed per folder
+  - Loading and error states
+
+- **Folder Filtering**: Files filtered by selected folder
+  - FileList receives `folderId` prop
+  - Updates when folder selection changes
+  - Shows files in selected folder or all files
+
+#### User Experience Improvements
+- **Loading States**: Spinner indicators during data fetching
+- **Error States**: User-friendly error messages
+- **Empty States**: Helpful messages when no data exists
+- **Optimistic Updates**: File list refreshes after mutations
+- **Unsaved Changes**: Visual indicator in editor
+- **Navigation**: Smooth transitions between views
+
+#### Files Modified
+- `apps/web/components/features/file-browser/file-list.tsx` - Connected to API
+- `apps/web/components/features/file-browser/sidebar.tsx` - Connected to API
+- `apps/web/app/files/[id]/page.tsx` - Full CRUD implementation
+- `apps/web/app/page.tsx` - New file creation wired up
+
+### Completed Tasks (Data Integration) ✅
+- [x] Replace mock data in FileList component with `useFiles()` hook
+- [x] Replace mock data in Sidebar component with `useFolders()` hook
+- [x] Wire up "New File" button to `filesApi.create()`
+- [x] Connect file editor to `filesApi.update()` and `filesApi.get()`
+- [x] Implement file deletion with `filesApi.delete()`
+- [x] Make file cards clickable to navigate to editor
+- [x] Add loading and error states to all components
+- [x] Implement folder-based file filtering
+- [x] Add unsaved changes detection in editor
+
+### Remaining Tasks (Phase 4)
 - [ ] Add folder creation/deletion UI
 - [ ] Connect search input to `searchApi.search()`
 - [ ] Implement tag management UI with `tagsApi`
 
 ## Next Steps
 
-1. **Phase 4 (Continue) - Data Integration**: Wire up UI components to real API endpoints
+1. **Phase 4 (Continue) - Remaining Features**: Search functionality and tag management UI
 2. **Phase 5 - Mobile App**: Set up Expo app with authentication and file management
 3. **Phase 6 - Advanced Features**: Real-time sync, internal links, export functionality
 
 ---
 
 **Last Updated:** 2025-12-18
-**Status:** Phase 4 In Progress (Auth & Infrastructure ✅ Complete, Production-Ready). Next: Replace mock data with live API integration.
+**Status:** Phase 4 Core Complete ✅ - File CRUD operations fully functional. Remaining: Search, Tags UI, Folder Management UI.
