@@ -229,6 +229,12 @@ This document archives completed phases and implementation details. See [PLAN.md
   - Proper ARIA labels and roles
   - Focus indicators for keyboard users
 
+#### Search Integration
+- **Search UI**: Connected header search to `/api/search`
+- **Results View**: Context-aware results with folder info
+- **Highlighting**: Matches highlighted in title and snippet
+- **UX**: Debounced query, clear control, empty/error states
+
 #### Code Quality
 - **Type Safety**: Custom `FolderWithChildren` type for nested structures
 - **Accessibility**: Keyboard navigation for all interactive elements

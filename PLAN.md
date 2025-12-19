@@ -129,7 +129,7 @@ redstone/
 **Priority: High** | **Effort: Medium** | **Time: 1-2 days**
 
 #### Tasks
-- [ ] **Search UI**: Wire search input to `/api/search`
+- [x] **Search UI**: Wire search input to `/api/search`
   - Add search results view
   - Highlight matching text
   - Show search in context (file + folder)

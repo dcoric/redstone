@@ -118,8 +118,15 @@ export interface TagResponse {
 }
 
 // Search responses
+export interface SearchFile extends File {
+  folder?: {
+    id: string;
+    name: string;
+  } | null;
+}
+
 export interface SearchResponse {
-  files: File[];
+  files: SearchFile[];
   query: string;
 }
 

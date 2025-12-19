@@ -103,6 +103,15 @@ export default auth((req) => {
 - Improved return type inference
 - Better TypeScript support for consumers
 
+### 7. ✅ Search UI Wiring
+
+**Updated:** [apps/web/app/page.tsx](apps/web/app/page.tsx)
+**Updated:** [apps/web/lib/types.ts](apps/web/lib/types.ts)
+
+- Connected header search to `/api/search` with debounced queries
+- Added results view with folder context and match highlighting
+- Added clear control, loading, empty, and error states
+
 ## Build Status
 
 ✅ **Production build successful** - No TypeScript errors or warnings
@@ -135,11 +144,6 @@ Now you can proceed with Phase 4 completion:
    - Create tag UI components
    - Wire up `tagsApi` functions
    - Add tag filtering
-
-4. **Implement search:**
-   - Connect search input to `searchApi.search()`
-   - Add search results display
-   - Highlight search terms
 
 ## Code Quality Improvements
 
