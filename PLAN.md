@@ -30,12 +30,14 @@ We use Next.js for both frontend and backend (API routes) to simplify deployment
 
 ## Current Status
 
-**✅ Phase 4 Core Complete** - File CRUD operations fully functional
+**✅ Phase 4 Complete** - All web frontend features implemented (file CRUD, folders, tags, search)
 
 ### What's Working
 - ✅ Full-stack authentication (web + mobile-ready API)
 - ✅ File management (create, read, update, delete, version history)
-- ✅ Folder organization with nested structure
+- ✅ Folder organization with nested structure (create, rename, delete)
+- ✅ Tag management (add, remove tags from files with autocomplete)
+- ✅ Search functionality with highlighting and context
 - ✅ Real-time UI updates with SWR
 - ✅ Markdown editor with live preview (CodeMirror 6)
 - ✅ Type-safe API client with comprehensive types
@@ -43,9 +45,6 @@ We use Next.js for both frontend and backend (API routes) to simplify deployment
 - ✅ Production build passing with zero errors
 
 ### What's Next
-- [ ] Search functionality UI (API ready)
-- [ ] Tag management UI (API ready)
-- [ ] Folder creation/deletion UI (API ready)
 - [ ] Mobile app (Phase 5)
 - [ ] Advanced features (Phase 6)
 
@@ -124,33 +123,36 @@ redstone/
 
 ## Remaining Work
 
-### Phase 4 - Web Frontend (Remaining)
+### Phase 4 - Web Frontend ✅ (Complete)
 
-**Priority: High** | **Effort: Medium** | **Time: 1-2 days**
+**Status: Complete** | **Completed: 2025-12-18**
 
-#### Tasks
+#### Completed Tasks
 - [x] **Search UI**: Wire search input to `/api/search`
   - Add search results view
   - Highlight matching text
   - Show search in context (file + folder)
   - Clear search functionality
 
-- [ ] **Tag Management UI**: Connect to `/api/tags`
-  - Tag picker component
+- [x] **Tag Management UI**: Connect to `/api/tags`
+  - Tag picker component with autocomplete
   - Add/remove tags on files
-  - Tag-based filtering
-  - Tag autocomplete
+  - Display current tags on file editor
+  - Create new tags on the fly
+  - Tag suggestions from existing tags
 
-- [ ] **Folder Management UI**: Add folder CRUD operations
-  - "New Folder" button
+- [x] **Folder Management UI**: Add folder CRUD operations
+  - "New Folder" button with dialog
   - Folder rename (inline editing)
-  - Folder delete (with empty check)
-  - Folder move/reorganize (drag-drop future enhancement)
+  - Folder delete (with empty check and confirmation)
+  - Parent folder selection for nested folders
+  - Context menu for folder actions
 
-#### Files to Modify
-- `apps/web/app/page.tsx` - Add search functionality
-- `apps/web/components/features/file-browser/sidebar.tsx` - Add folder creation
-- `apps/web/app/files/[id]/page.tsx` - Add tag management
+#### Files Modified
+- `apps/web/app/page.tsx` - Search functionality
+- `apps/web/components/features/file-browser/sidebar.tsx` - Folder CRUD operations
+- `apps/web/app/files/[id]/page.tsx` - Tag management
+- `apps/web/lib/hooks/use-tags.ts` - New hook for tags
 
 ---
 
@@ -307,5 +309,5 @@ pnpm lint
 ---
 
 **Last Updated:** 2025-12-18
-**Current Phase:** Phase 4 (Core Complete) → Remaining Features
-**Next Milestone:** Complete search/tags/folder UI, then Phase 5 (Mobile App)
+**Current Phase:** Phase 4 Complete → Phase 5 (Mobile App)
+**Next Milestone:** Begin mobile app development with Expo

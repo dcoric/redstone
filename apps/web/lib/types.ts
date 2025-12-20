@@ -27,6 +27,16 @@ export interface File {
   lastSynced: string;
 }
 
+export interface FileWithRelations extends File {
+  folder?: {
+    id: string;
+    name: string;
+  } | null;
+  tags?: Array<{
+    tag: Tag;
+  }>;
+}
+
 export interface Folder {
   id: string;
   name: string;
@@ -92,7 +102,7 @@ export interface FilesListResponse {
 }
 
 export interface FileResponse {
-  file: File;
+  file: FileWithRelations;
 }
 
 export interface FileVersionsResponse {

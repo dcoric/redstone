@@ -2,7 +2,7 @@
 
 import useSWR from 'swr';
 import { filesApi } from '@/lib/api-client';
-import type { File, FilesListParams } from '@/lib/types';
+import type { File, FileWithRelations, FilesListParams } from '@/lib/types';
 
 export function useFiles(params?: FilesListParams) {
   const key = params ? ['files', JSON.stringify(params)] : 'files';
@@ -29,7 +29,7 @@ export function useFile(id: string | null) {
   );
 
   return {
-    file: data?.file as File | undefined,
+    file: data?.file as FileWithRelations | undefined,
     isLoading,
     isError: error,
     mutate,

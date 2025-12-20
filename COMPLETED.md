@@ -234,6 +234,23 @@ This document archives completed phases and implementation details. See [PLAN.md
 - **Results View**: Context-aware results with folder info
 - **Highlighting**: Matches highlighted in title and snippet
 - **UX**: Debounced query, clear control, empty/error states
+- **Accessibility**: Proper button elements with focus indicators
+
+#### Tag Management
+- **Tag Display**: Visual chips with remove functionality
+- **Add Tags**: Autocomplete from existing tags with keyboard support (Enter/Escape)
+- **Create Tags**: New tags created on-the-fly when typed
+- **Tag Suggestions**: Filtered dropdown (excludes already-added tags)
+- **UX**: Proper blur handling using `onMouseDown` to prevent race conditions
+- **State Management**: SWR-based with `useTags` hook
+
+#### Folder Management
+- **Create Folder**: Dialog with parent folder selection for nested structures
+- **Rename Folder**: Inline editing with keyboard support (Enter to save, Escape to cancel)
+- **Delete Folder**: Confirmation dialog (not browser alert) with proper error handling
+- **Context Menu**: Three-dot dropdown for folder actions
+- **Visual Hierarchy**: Nested folders with expand/collapse and file counts
+- **Loading States**: Per-operation loading indicators
 
 #### Code Quality
 - **Type Safety**: Custom `FolderWithChildren` type for nested structures
@@ -243,10 +260,12 @@ This document archives completed phases and implementation details. See [PLAN.md
 
 #### Files Modified
 - [apps/web/components/features/file-browser/file-list.tsx](apps/web/components/features/file-browser/file-list.tsx) - API integration + accessibility
-- [apps/web/components/features/file-browser/sidebar.tsx](apps/web/components/features/file-browser/sidebar.tsx) - API integration + type safety
+- [apps/web/components/features/file-browser/sidebar.tsx](apps/web/components/features/file-browser/sidebar.tsx) - Folder CRUD with dialogs + inline editing
 - [apps/web/components/features/editor/markdown-editor.tsx](apps/web/components/features/editor/markdown-editor.tsx) - Content synchronization
-- [apps/web/app/files/[id]/page.tsx](apps/web/app/files/[id]/page.tsx) - Full CRUD implementation
-- [apps/web/app/page.tsx](apps/web/app/page.tsx) - File creation
+- [apps/web/app/files/[id]/page.tsx](apps/web/app/files/[id]/page.tsx) - Full file CRUD + tag management
+- [apps/web/app/page.tsx](apps/web/app/page.tsx) - File creation + search UI
+- [apps/web/lib/hooks/use-tags.ts](apps/web/lib/hooks/use-tags.ts) - New SWR hook for tags
+- [apps/web/lib/types.ts](apps/web/lib/types.ts) - SearchFile type with folder context
 
 ### Build Status
 ✅ Production build passing with zero TypeScript errors
