@@ -146,6 +146,24 @@ export function Sidebar({ className, onFolderSelect, ...props }: SidebarProps) {
         return rootFolders
     }
 
+    const folderTree = React.useMemo(
+        () => buildFolderTree(folders ?? []),
+        [folders]
+    )
+
+    const allFoldersFlat = React.useMemo(() => {
+        const flatten = (folders: FolderWithChildren[], result: FolderWithChildren[] = []): FolderWithChildren[] => {
+            folders.forEach(folder => {
+                result.push(folder)
+                if (folder.children && folder.children.length > 0) {
+                    flatten(folder.children, result)
+                }
+            })
+            return result
+        }
+        return flatten(folderTree)
+    }, [folderTree])
+
     if (isLoading) {
         return (
             <div className={cn("w-64 border-r bg-muted/10 pb-12", className)} {...props}>
@@ -165,21 +183,6 @@ export function Sidebar({ className, onFolderSelect, ...props }: SidebarProps) {
             </div>
         )
     }
-
-    const folderTree = buildFolderTree(folders)
-
-    const allFoldersFlat = React.useMemo(() => {
-        const flatten = (folders: FolderWithChildren[], result: FolderWithChildren[] = []): FolderWithChildren[] => {
-            folders.forEach(folder => {
-                result.push(folder)
-                if (folder.children && folder.children.length > 0) {
-                    flatten(folder.children, result)
-                }
-            })
-            return result
-        }
-        return flatten(folderTree)
-    }, [folderTree])
 
     return (
         <div className={cn("w-64 border-r bg-muted/10 pb-12", className)} {...props}>

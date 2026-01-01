@@ -45,6 +45,7 @@ We use Next.js for both frontend and backend (API routes) to simplify deployment
 - ✅ Production build passing with zero errors
 
 ### What's Next
+- [ ] Web/API verification gate (Phase 4.5)
 - [ ] Mobile app (Phase 5)
 - [ ] Advanced features (Phase 6)
 
@@ -153,6 +154,23 @@ redstone/
 - `apps/web/components/features/file-browser/sidebar.tsx` - Folder CRUD operations
 - `apps/web/app/files/[id]/page.tsx` - Tag management
 - `apps/web/lib/hooks/use-tags.ts` - New hook for tags
+
+---
+
+### Phase 4.5 - Web/API Verification Gate
+
+**Priority: High** | **Effort: Low** | **Time: 0.5-1 day**
+
+Goal: confirm all web and API behaviors are stable before starting mobile.
+
+#### Checklist
+- [ ] Auth flow (signup, signin, signout, protected routes, redirect)
+- [ ] File CRUD (create, edit, delete, version history)
+- [ ] Folder CRUD (create, rename, delete empty, move)
+- [ ] Tag CRUD (add, remove, autocomplete suggestions)
+- [ ] Search results (highlighting, context, empty/error states)
+- [ ] API contracts match docs in `API.md`
+- [x] `pnpm --filter web build` pass (includes TypeScript check)
 
 ---
 
