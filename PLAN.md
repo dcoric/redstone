@@ -48,6 +48,7 @@ We use Next.js for both frontend and backend (API routes) to simplify deployment
 - [ ] Web/API verification gate (Phase 4.5)
 - [ ] Mobile app (Phase 5)
 - [ ] Advanced features (Phase 6)
+- [ ] Desktop app (Phase 7)
 
 ---
 
@@ -243,6 +244,30 @@ Goal: confirm all web and API behaviors are stable before starting mobile.
   - Table editor (WYSIWYG)
   - Math equations (KaTeX)
   - Code block language detection
+
+---
+
+### Phase 7 - Desktop App (Electron)
+
+**Priority: Low** | **Effort: Medium** | **Time: 1-2 weeks**
+
+#### Tasks
+- [ ] Set up Electron app with TypeScript
+- [ ] Reuse web UI via a desktop shell
+- [ ] Desktop auth flow (JWT + secure storage)
+- [ ] File management (list, edit, create, delete)
+- [ ] Offline-first storage (SQLite)
+- [ ] Sync with `/api/sync`
+- [ ] Desktop packaging (macOS, Windows, Linux)
+- [ ] CI release pipeline (build + upload artifacts to GitHub Releases)
+
+#### Key Decisions
+- **Framework**: Electron Forge
+- **CI**: GitHub Actions release workflow
+- **Publishing**: `@electron-forge/publisher-github`
+- **Packaging**: Forge makers (Squirrel/Zip/Deb/Rpm)
+- **Local Storage**: SQLite + encrypted store for tokens
+- **Updates**: Auto-update strategy (optional)
 
 ---
 
