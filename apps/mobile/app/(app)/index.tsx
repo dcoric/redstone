@@ -1,40 +1,22 @@
-import { useState, useEffect, useCallback } from 'react';
-import { View, Text, FlatList, ActivityIndicator, RefreshControl } from 'react-native';
+import { View, Text, FlatList, ActivityIndicator, RefreshControl, TouchableOpacity } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
-import { filesApi } from '../../lib/api-client';
-import { FileWithRelations } from '../../lib/types';
+import { useFiles } from '../../lib/hooks/use-files';
 import FileCard from '../../components/file-card';
 import { Plus } from 'lucide-react-native';
-import { TouchableOpacity } from 'react-native';
+import { useFocusEffect } from 'expo-router';
+import { useCallback } from 'react';
 
 export default function FileList() {
-    const [files, setFiles] = useState<FileWithRelations[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [refreshing, setRefreshing] = useState(false);
+    const { files, loading, refreshing, refresh, reload } = useFiles();
     const router = useRouter();
 
-    const loadFiles = async () => {
-        try {
-            const response = await filesApi.list();
-            setFiles(response.files);
-        } catch (error) {
-            console.error('Failed to load files', error);
-        } finally {
-            setLoading(false);
-            setRefreshing(false);
-        }
-    };
+    useFocusEffect(
+        useCallback(() => {
+            reload();
+        }, [reload])
+    );
 
-    useEffect(() => {
-        loadFiles();
-    }, []);
-
-    const onRefresh = useCallback(() => {
-        setRefreshing(true);
-        loadFiles();
-    }, []);
-
-    if (loading && !refreshing) {
+    if (loading) {
         return (
             <View className="flex-1 justify-center items-center">
                 <ActivityIndicator size="large" color="#3b82f6" />
@@ -46,7 +28,7 @@ export default function FileList() {
         <View className="flex-1 bg-gray-50">
             <Stack.Screen
                 options={{
-                    title: 'My Files',
+                    title: 'My Files (Offline)',
                     headerRight: () => (
                         <TouchableOpacity onPress={() => router.push('/new-file')}>
                             <Plus color="#3b82f6" size={24} />
@@ -58,10 +40,21 @@ export default function FileList() {
             <FlatList
                 data={files}
                 keyExtractor={(item) => item.id}
-                renderItem={({ item }) => <FileCard file={item} />}
+                renderItem={({ item }) => (
+                    <FileCard file={{
+                        ...item,
+                        userId: '', // mock
+                        createdAt: item.created_at,
+                        updatedAt: item.updated_at,
+                        deletedAt: item.deleted_at,
+                        lastSynced: item.last_synced || '',
+                        folder: undefined, // TODO: fetch folder name
+                        folderId: item.folder_id
+                    }} />
+                )}
                 contentContainerStyle={{ padding: 16 }}
                 refreshControl={
-                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                    <RefreshControl refreshing={refreshing} onRefresh={refresh} />
                 }
                 ListEmptyComponent={
                     <View className="flex-1 items-center justify-center mt-20">

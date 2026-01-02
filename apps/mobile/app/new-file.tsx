@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { View, TextInput, ActivityIndicator, Alert, TouchableOpacity, Text, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
-import { filesApi } from '../lib/api-client';
+import { dbFiles } from '../lib/db';
 import { Save, X } from 'lucide-react-native';
 
 export default function NewFile() {
@@ -18,12 +18,24 @@ export default function NewFile() {
 
         setSaving(true);
         try {
-            const response = await filesApi.create({
+            // Offline-first: save locally
+            const id = Date.now().toString(); // Temporary ID
+            await dbFiles.insert({
+                id,
                 title,
                 content,
+                folder_id: null,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+                deleted_at: null,
+                last_synced: null,
+                dirty: 1,
+                versionId: null
             });
-            // Replace current screen with the new file editor to avoid back returning to "New File"
-            router.replace(`/file/${response.file.id}`);
+
+            // router.replace(`/file/${id}`); // We'd need to update editor too.
+            // For now just go back.
+            router.back();
         } catch (error) {
             Alert.alert('Error', 'Failed to create file');
             setSaving(false);
