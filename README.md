@@ -5,8 +5,8 @@ An Obsidian-like knowledge management application with markdown support, folder 
 ## Tech Stack
 
 - **Monorepo**: pnpm workspaces + Turborepo
-- **Web**: Next.js 14+ (App Router) with TypeScript
-- **Mobile**: Expo React Native (planned)
+- **Web**: Next.js 16 (App Router) with TypeScript
+- **Mobile**: Expo React Native (in progress)
 - **Database**: PostgreSQL 15+ with Prisma ORM
 - **Authentication**: NextAuth.js (web) + JWT (mobile)
 
@@ -16,12 +16,12 @@ An Obsidian-like knowledge management application with markdown support, folder 
 redstone/
 ├── apps/
 │   ├── web/              # Next.js web application
-│   └── mobile/           # Expo mobile app (planned)
+│   └── mobile/           # Expo mobile app (in progress)
 ├── packages/
 │   ├── shared/           # Shared TypeScript types and utilities
 │   ├── database/         # Prisma schema and client
-│   ├── api-client/       # Shared API client (planned)
-│   └── markdown/         # Markdown utilities (planned)
+│   ├── api-client/       # Shared API client
+│   └── markdown/         # Markdown utilities
 ├── docker/               # Docker configuration
 │   └── docker-compose.yml
 ├── PLAN.md              # Detailed development plan
@@ -244,4 +244,4 @@ See [PLAN.md](PLAN.md) for detailed implementation plan and [IMPROVEMENTS.md](IM
 
 ## License
 
-[Your License Here]
+MIT
