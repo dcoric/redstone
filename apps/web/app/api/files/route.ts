@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@redstone/database';
 import { getUserId } from '@/lib/api-middleware';
+import { broadcast } from '@/lib/event-stream';
 
 // GET /api/files - List all files for the authenticated user
 export async function GET(request: NextRequest) {
@@ -104,6 +105,8 @@ export async function POST(request: NextRequest) {
         },
       },
     });
+
+    broadcast('file:created', { id: file.id, userId });
 
     return NextResponse.json({ file }, { status: 201 });
   } catch (error) {

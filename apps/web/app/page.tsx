@@ -5,8 +5,9 @@ import { FileList } from "@/components/features/file-browser/file-list"
 import { Sidebar } from "@/components/features/file-browser/sidebar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Search, Plus, User, LogOut, Loader2, X } from "lucide-react"
+import { Search, Plus, User, LogOut, Loader2, X, Wifi, WifiOff } from "lucide-react"
 import { useAuth } from "@/lib/hooks/use-auth"
+import { useSSE } from "@/lib/hooks/use-sse"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,6 +25,9 @@ export default function Home() {
   const { user, signOut } = useAuth()
   const router = useRouter()
   const { mutate } = useFiles()
+  const { isConnected } = useSSE({
+    onFileChanged: () => mutate(),
+  })
   const [isCreating, setIsCreating] = React.useState(false)
   const [selectedFolderId, setSelectedFolderId] = React.useState<string | null>(null)
   const [searchQuery, setSearchQuery] = React.useState("")
@@ -204,6 +208,10 @@ export default function Home() {
               )}
             </Button>
             <DropdownMenu>
+              <div
+                className={`h-2 w-2 rounded-full mr-2 ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}
+                title={isConnected ? 'Real-time sync active' : 'Real-time sync disconnected'}
+              />
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full">
                   <User className="h-4 w-4" />

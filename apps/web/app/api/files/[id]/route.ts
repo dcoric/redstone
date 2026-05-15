@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@redstone/database';
 import { getUserId } from '@/lib/api-middleware';
+import { broadcast } from '@/lib/event-stream';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -111,6 +112,8 @@ export async function PUT(
       },
     });
 
+    broadcast('file:updated', { id, userId });
+
     return NextResponse.json({ file });
   } catch (error) {
     console.error('Error updating file:', error);
@@ -153,6 +156,8 @@ export async function DELETE(
       where: { id },
       data: { deletedAt: new Date() },
     });
+
+    broadcast('file:deleted', { id, userId });
 
     return NextResponse.json({ message: 'File deleted successfully' });
   } catch (error) {
