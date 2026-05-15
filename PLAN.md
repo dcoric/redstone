@@ -170,7 +170,7 @@ Goal: confirm all web and API behaviors are stable before starting mobile.
 - [x] Folder CRUD (create, rename, delete empty, move) — verified 2026-05-15
 - [x] Tag CRUD (add, remove, autocomplete suggestions) — verified 2026-05-15
 - [x] Search results (highlighting, context, empty/error states) — verified 2026-05-15
-- [ ] API contracts match docs in `API.md`
+- [x] API contracts match docs in `API.md` — verified 2026-05-15
 - [x] `pnpm --filter web build` pass (includes TypeScript check)
 
 ---
