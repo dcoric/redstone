@@ -21,6 +21,7 @@ model User {
   files     File[]
   folders   Folder[]
   tags      Tag[]
+  attachments Attachment[]
 
   @@map("users")
 }
@@ -59,6 +60,7 @@ model File {
   folder      Folder?       @relation(fields: [folderId], references: [id], onDelete: SetNull)
   versions    FileVersion[]
   tags        FileTag[]
+  attachments Attachment[]
 
   @@index([userId, folderId])
   @@index([userId, updatedAt])
@@ -101,4 +103,22 @@ model FileTag {
 
   @@id([fileId, tagId])
   @@map("file_tags")
+}
+
+model Attachment {
+  id             String   @id @default(cuid())
+  filename       String
+  storedFilename String
+  mimeType       String
+  size           Int
+  fileId         String?
+  userId         String
+  createdAt      DateTime @default(now())
+
+  file   File?   @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([fileId])
+  @@map("attachments")
 }

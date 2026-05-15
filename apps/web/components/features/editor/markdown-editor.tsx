@@ -5,6 +5,7 @@ import CodeMirror from "@uiw/react-codemirror"
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown"
 import { languages } from "@codemirror/language-data"
 import { oneDark } from "@codemirror/theme-one-dark"
+import { vim } from "@replit/codemirror-vim"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import rehypeRaw from "rehype-raw"
@@ -20,6 +21,7 @@ interface MarkdownEditorProps {
     className?: string
     files?: WikiLinkFile[]
     onWikiLinkClick?: (title: string) => void
+    vimMode?: boolean
 }
 
 export function MarkdownEditor({
@@ -29,6 +31,7 @@ export function MarkdownEditor({
     className,
     files = [],
     onWikiLinkClick,
+    vimMode = false,
 }: MarkdownEditorProps) {
     const [content, setContent] = React.useState(initialContent)
     const [isPreview, setIsPreview] = React.useState(false)
@@ -52,8 +55,11 @@ export function MarkdownEditor({
         if (files.length > 0) {
             exts.push(wikiLinkAutocomplete(files))
         }
+        if (vimMode) {
+            exts.push(vim())
+        }
         return exts
-    }, [files])
+    }, [files, vimMode])
 
     const handleLinkClick = React.useCallback(
         (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {

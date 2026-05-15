@@ -5,7 +5,7 @@ import { FileList } from "@/components/features/file-browser/file-list"
 import { Sidebar } from "@/components/features/file-browser/sidebar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Search, Plus, User, LogOut, Loader2, X, Wifi, WifiOff } from "lucide-react"
+import { Search, Plus, User, LogOut, Loader2, X, Wifi, WifiOff, Network, Upload } from "lucide-react"
 import { useAuth } from "@/lib/hooks/use-auth"
 import { useSSE } from "@/lib/hooks/use-sse"
 import {
@@ -17,6 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { filesApi, searchApi } from "@/lib/api-client"
 import { useFiles } from "@/lib/hooks/use-files"
 import type { SearchFile } from "@/lib/types"
@@ -49,7 +50,7 @@ export default function Home() {
         content: "# Untitled\n\nStart writing your markdown here...",
         folderId: selectedFolderId || undefined,
       })
-      await mutate() // Refresh file list
+      await mutate()
       router.push(`/files/${response.file.id}`)
     } catch (error) {
       console.error("Failed to create file:", error)
@@ -57,6 +58,39 @@ export default function Home() {
     } finally {
       setIsCreating(false)
     }
+  }
+
+  const handleImport = async () => {
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = '.md'
+    input.onchange = async (e: Event) => {
+      const target = e.target as HTMLInputElement
+      const file = target.files?.[0]
+      if (!file) return
+
+      try {
+        const formData = new FormData()
+        formData.append('file', file)
+
+        const res = await fetch('/api/files/import', {
+          method: 'POST',
+          body: formData,
+        })
+
+        if (!res.ok) {
+          const error = await res.json()
+          throw new Error(error.error || 'Import failed')
+        }
+
+        await mutate()
+        const data = await res.json()
+        router.push(`/files/${data.file.id}`)
+      } catch (error: any) {
+        alert(error.message || 'Import failed. Please try again.')
+      }
+    }
+    input.click()
   }
 
   React.useEffect(() => {
@@ -173,6 +207,12 @@ export default function Home() {
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
               />
+              <Button variant="ghost" size="icon" asChild className="ml-2">
+                <Link href="/graph">
+                  <Network className="h-4 w-4" />
+                  <span className="sr-only">Graph View</span>
+                </Link>
+              </Button>
               <div className="absolute right-2.5 top-2.5 flex h-4 w-4 items-center justify-center text-muted-foreground">
                 {isSearching ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -206,6 +246,14 @@ export default function Home() {
                   New File
                 </>
               )}
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleImport}
+            >
+              <Upload className="mr-2 h-4 w-4" />
+              Import
             </Button>
             <DropdownMenu>
               <div
