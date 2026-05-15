@@ -165,7 +165,7 @@ redstone/
 Goal: confirm all web and API behaviors are stable before starting mobile.
 
 #### Checklist
-- [ ] Auth flow (signup, signin, signout, protected routes, redirect)
+- [x] Auth flow (signup, signin, signout, protected routes, redirect) — verified 2026-05-15
 - [ ] File CRUD (create, edit, delete, version history)
 - [ ] Folder CRUD (create, rename, delete empty, move)
 - [ ] Tag CRUD (add, remove, autocomplete suggestions)
