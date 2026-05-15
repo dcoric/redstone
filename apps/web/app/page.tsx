@@ -5,7 +5,7 @@ import { FileList } from "@/components/features/file-browser/file-list"
 import { Sidebar } from "@/components/features/file-browser/sidebar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Search, Plus, User, LogOut, Loader2, X, Wifi, WifiOff } from "lucide-react"
+import { Search, Plus, User, LogOut, Loader2, X, Wifi, WifiOff, Network } from "lucide-react"
 import { useAuth } from "@/lib/hooks/use-auth"
 import { useSSE } from "@/lib/hooks/use-sse"
 import {
@@ -17,6 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { filesApi, searchApi } from "@/lib/api-client"
 import { useFiles } from "@/lib/hooks/use-files"
 import type { SearchFile } from "@/lib/types"
@@ -173,6 +174,12 @@ export default function Home() {
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
               />
+              <Button variant="ghost" size="icon" asChild className="ml-2">
+                <Link href="/graph">
+                  <Network className="h-4 w-4" />
+                  <span className="sr-only">Graph View</span>
+                </Link>
+              </Button>
               <div className="absolute right-2.5 top-2.5 flex h-4 w-4 items-center justify-center text-muted-foreground">
                 {isSearching ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
