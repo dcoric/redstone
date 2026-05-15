@@ -3,13 +3,19 @@
 import * as React from "react"
 import { useParams, useRouter } from "next/navigation"
 import { MarkdownEditor } from "@/components/features/editor/markdown-editor"
-import { ArrowLeft, Save, Loader2, Tag as TagIcon, X, Plus } from "lucide-react"
+import { ArrowLeft, Save, Loader2, Tag as TagIcon, X, Plus, Link as LinkIcon, AlertTriangle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import Link from "next/link"
-import { useFile } from "@/lib/hooks/use-files"
+import { useFile, useFiles } from "@/lib/hooks/use-files"
 import { useTags } from "@/lib/hooks/use-tags"
 import { filesApi, tagsApi } from "@/lib/api-client"
+import { validateWikiLinks } from "@/lib/wiki-links"
+
+interface Backlink {
+    id: string
+    title: string
+}
 
 export default function FilePage() {
     const params = useParams()
@@ -17,6 +23,7 @@ export default function FilePage() {
     const id = params?.id as string
     const { file, isLoading, isError, mutate } = useFile(id)
     const { tags: availableTags, mutate: mutateTags } = useTags()
+    const { files: allFiles } = useFiles()
     
     const [content, setContent] = React.useState("")
     const [title, setTitle] = React.useState("")
@@ -26,10 +33,11 @@ export default function FilePage() {
     const [isAddingTag, setIsAddingTag] = React.useState(false)
     const [isRemovingTag, setIsRemovingTag] = React.useState<string | null>(null)
     const [showTagInput, setShowTagInput] = React.useState(false)
+    const [backlinks, setBacklinks] = React.useState<Backlink[]>([])
+    const [showBacklinks, setShowBacklinks] = React.useState(false)
 
     const currentTags = file?.tags?.map(ft => ft.tag) || []
 
-    // Update content when file loads
     React.useEffect(() => {
         if (file) {
             setContent(file.content)
@@ -37,6 +45,30 @@ export default function FilePage() {
             setHasChanges(false)
         }
     }, [file])
+
+    React.useEffect(() => {
+        if (!id) return
+        const fetchBacklinks = async () => {
+            try {
+                const res = await fetch(`/api/files/${id}/backlinks`)
+                if (res.ok) {
+                    const data = await res.json()
+                    setBacklinks(data.backlinks || [])
+                }
+            } catch (error) {
+                console.error("Failed to fetch backlinks:", error)
+            }
+        }
+        fetchBacklinks()
+    }, [id])
+
+    const brokenLinks = React.useMemo(() => {
+        if (!allFiles.length) return []
+        const fileTitles = allFiles.map((f: any) => f.title)
+        const allTitles = [...fileTitles, title]
+        return validateWikiLinks(content, allTitles.map((t: string) => ({ id: "", title: t })))
+            .filter((link) => !link.valid)
+    }, [content, allFiles, title])
 
     const handleContentChange = React.useCallback((value: string) => {
         setContent(value)
@@ -58,7 +90,7 @@ export default function FilePage() {
                 title: title || file.title,
                 content: content,
             })
-            await mutate() // Refresh file data
+            await mutate()
             setHasChanges(false)
         } catch (error) {
             console.error("Failed to save file:", error)
@@ -68,14 +100,23 @@ export default function FilePage() {
         }
     }, [id, file, title, content, mutate])
 
+    const handleWikiLinkClick = React.useCallback((linkTitle: string) => {
+        const found = allFiles.find((f: any) => f.title.toLowerCase() === linkTitle.toLowerCase())
+        if (found) {
+            router.push(`/files/${found.id}`)
+        } else {
+            alert(`File "${linkTitle}" not found.`)
+        }
+    }, [allFiles, router])
+
     const handleAddTag = React.useCallback(async (tagName: string) => {
         if (!id || !tagName.trim()) return
 
         setIsAddingTag(true)
         try {
             await tagsApi.addToFile(id, tagName.trim())
-            await mutate() // Refresh file data
-            await mutateTags() // Refresh tags list
+            await mutate()
+            await mutateTags()
             setTagInput("")
             setShowTagInput(false)
         } catch (error) {
@@ -92,8 +133,8 @@ export default function FilePage() {
         setIsRemovingTag(tagId)
         try {
             await tagsApi.removeFromFile(id, tagId)
-            await mutate() // Refresh file data
-            await mutateTags() // Refresh tags list
+            await mutate()
+            await mutateTags()
         } catch (error) {
             console.error("Failed to remove tag:", error)
             alert("Failed to remove tag. Please try again.")
@@ -120,6 +161,10 @@ export default function FilePage() {
             setTagInput("")
         }
     }
+
+    const autocompleteFiles = React.useMemo(() => {
+        return allFiles.map((f: any) => ({ id: f.id, title: f.title }))
+    }, [allFiles])
 
     if (isLoading) {
         return (
@@ -156,7 +201,6 @@ export default function FilePage() {
 
     return (
         <div className="flex h-screen flex-col bg-background">
-            {/* Header */}
             <header className="flex flex-col border-b bg-muted/40">
                 <div className="flex h-14 items-center justify-between px-4">
                     <div className="flex items-center gap-4 flex-1 min-w-0">
@@ -196,7 +240,6 @@ export default function FilePage() {
                         </Button>
                     </div>
                 </div>
-                {/* Tags Section */}
                 <div className="flex items-center gap-2 px-4 pb-3 flex-wrap">
                     {currentTags.map((tag) => (
                         <div
@@ -264,15 +307,60 @@ export default function FilePage() {
                             <span>Add tag</span>
                         </button>
                     )}
+                    <button
+                        type="button"
+                        onClick={() => setShowBacklinks(!showBacklinks)}
+                        className="inline-flex items-center gap-1 rounded-full border border-dashed border-muted-foreground/30 px-2.5 py-1 text-xs text-muted-foreground hover:border-muted-foreground/50 hover:text-foreground transition-colors"
+                    >
+                        <LinkIcon className="h-3 w-3" />
+                        <span>Backlinks ({backlinks.length})</span>
+                    </button>
                 </div>
             </header>
 
-            {/* Editor Area */}
-            <div className="flex-1 overflow-hidden">
-                <MarkdownEditor 
-                    initialContent={content}
-                    onChange={handleContentChange}
-                />
+            <div className="flex-1 overflow-hidden flex flex-col">
+                {brokenLinks.length > 0 && (
+                    <div className="flex items-center gap-2 px-4 py-2 bg-destructive/10 text-destructive text-xs border-b">
+                        <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0" />
+                        <span>
+                            {brokenLinks.length} broken link{brokenLinks.length > 1 ? "s" : ""}:{" "}
+                            {brokenLinks.map((l) => `"${l.title}"`).join(", ")}
+                        </span>
+                    </div>
+                )}
+
+                {showBacklinks && backlinks.length > 0 && (
+                    <div className="border-b bg-muted/20 px-4 py-3">
+                        <div className="text-xs font-medium text-muted-foreground mb-2">Linked from:</div>
+                        <div className="flex flex-wrap gap-2">
+                            {backlinks.map((bl) => (
+                                <button
+                                    key={bl.id}
+                                    onClick={() => router.push(`/files/${bl.id}`)}
+                                    className="inline-flex items-center gap-1 rounded bg-primary/10 px-2 py-1 text-xs text-primary hover:bg-primary/20 transition-colors"
+                                >
+                                    <LinkIcon className="h-3 w-3" />
+                                    {bl.title}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {showBacklinks && backlinks.length === 0 && (
+                    <div className="border-b bg-muted/20 px-4 py-3 text-xs text-muted-foreground">
+                        No backlinks yet
+                    </div>
+                )}
+
+                <div className="flex-1 overflow-hidden">
+                    <MarkdownEditor 
+                        initialContent={content}
+                        onChange={handleContentChange}
+                        files={autocompleteFiles}
+                        onWikiLinkClick={handleWikiLinkClick}
+                    />
+                </div>
             </div>
         </div>
     )
