@@ -167,10 +167,10 @@ Goal: confirm all web and API behaviors are stable before starting mobile.
 #### Checklist
 - [x] Auth flow (signup, signin, signout, protected routes, redirect) — verified 2026-05-15
 - [x] File CRUD (create, edit, delete, version history) — verified 2026-05-15
-- [ ] Folder CRUD (create, rename, delete empty, move)
-- [ ] Tag CRUD (add, remove, autocomplete suggestions)
-- [ ] Search results (highlighting, context, empty/error states)
-- [ ] API contracts match docs in `API.md`
+- [x] Folder CRUD (create, rename, delete empty, move) — verified 2026-05-15
+- [x] Tag CRUD (add, remove, autocomplete suggestions) — verified 2026-05-15
+- [x] Search results (highlighting, context, empty/error states) — verified 2026-05-15
+- [x] API contracts match docs in `API.md` — verified 2026-05-15
 - [x] `pnpm --filter web build` pass (includes TypeScript check)
 
 ---
