@@ -3,7 +3,7 @@
 import * as React from "react"
 import { useParams, useRouter } from "next/navigation"
 import { MarkdownEditor } from "@/components/features/editor/markdown-editor"
-import { ArrowLeft, Save, Loader2, Tag as TagIcon, X, Plus, Link as LinkIcon, AlertTriangle } from "lucide-react"
+import { ArrowLeft, Save, Loader2, Tag as TagIcon, X, Plus, Link as LinkIcon, AlertTriangle, Download } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import Link from "next/link"
@@ -108,6 +108,10 @@ export default function FilePage() {
             alert(`File "${linkTitle}" not found.`)
         }
     }, [allFiles, router])
+
+    const handleExport = React.useCallback(() => {
+        window.open(`/api/files/${id}/export?format=html`, '_blank')
+    }, [id])
 
     const handleAddTag = React.useCallback(async (tagName: string) => {
         if (!id || !tagName.trim()) return
@@ -237,6 +241,14 @@ export default function FilePage() {
                                     Save
                                 </>
                             )}
+                        </Button>
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={handleExport}
+                        >
+                            <Download className="mr-2 h-4 w-4" />
+                            Export
                         </Button>
                     </div>
                 </div>
