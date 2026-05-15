@@ -166,7 +166,7 @@ Goal: confirm all web and API behaviors are stable before starting mobile.
 
 #### Checklist
 - [x] Auth flow (signup, signin, signout, protected routes, redirect) — verified 2026-05-15
-- [ ] File CRUD (create, edit, delete, version history)
+- [x] File CRUD (create, edit, delete, version history) — verified 2026-05-15
 - [ ] Folder CRUD (create, rename, delete empty, move)
 - [ ] Tag CRUD (add, remove, autocomplete suggestions)
 - [ ] Search results (highlighting, context, empty/error states)
