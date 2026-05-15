@@ -3,7 +3,7 @@
 import * as React from "react"
 import { useParams, useRouter } from "next/navigation"
 import { MarkdownEditor } from "@/components/features/editor/markdown-editor"
-import { ArrowLeft, Save, Loader2, Tag as TagIcon, X, Plus, Link as LinkIcon, AlertTriangle, Download } from "lucide-react"
+import { ArrowLeft, Save, Loader2, Tag as TagIcon, X, Plus, Link as LinkIcon, AlertTriangle, Download, Keyboard } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import Link from "next/link"
@@ -35,6 +35,7 @@ export default function FilePage() {
     const [showTagInput, setShowTagInput] = React.useState(false)
     const [backlinks, setBacklinks] = React.useState<Backlink[]>([])
     const [showBacklinks, setShowBacklinks] = React.useState(false)
+    const [vimMode, setVimMode] = React.useState(false)
 
     const currentTags = file?.tags?.map(ft => ft.tag) || []
 
@@ -250,6 +251,14 @@ export default function FilePage() {
                             <Download className="mr-2 h-4 w-4" />
                             Export
                         </Button>
+                        <Button
+                            size="sm"
+                            variant={vimMode ? "default" : "outline"}
+                            onClick={() => setVimMode(!vimMode)}
+                        >
+                            <Keyboard className="mr-2 h-4 w-4" />
+                            {vimMode ? "Vim ON" : "Vim"}
+                        </Button>
                     </div>
                 </div>
                 <div className="flex items-center gap-2 px-4 pb-3 flex-wrap">
@@ -371,6 +380,7 @@ export default function FilePage() {
                         onChange={handleContentChange}
                         files={autocompleteFiles}
                         onWikiLinkClick={handleWikiLinkClick}
+                        vimMode={vimMode}
                     />
                 </div>
             </div>
