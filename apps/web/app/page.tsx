@@ -197,8 +197,8 @@ export default function Home() {
       <Sidebar onFolderSelect={setSelectedFolderId} />
       <main className="flex flex-1 flex-col overflow-hidden">
         <header className="flex h-14 items-center gap-4 border-b border-border bg-muted px-6">
-          <div className="flex flex-1 items-center gap-4">
-            <div className="relative flex-1 md:grow-0">
+          <div className="flex flex-1 items-center gap-2">
+            <div className="relative md:grow-0">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 type="search"
@@ -207,12 +207,6 @@ export default function Home() {
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
               />
-              <Button variant="ghost" size="icon" asChild className="ml-2">
-                <Link href="/graph">
-                  <Network className="h-4 w-4" />
-                  <span className="sr-only">Graph View</span>
-                </Link>
-              </Button>
               <div className="absolute right-2.5 top-2.5 flex h-4 w-4 items-center justify-center text-muted-foreground">
                 {isSearching ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -228,6 +222,12 @@ export default function Home() {
                 ) : null}
               </div>
             </div>
+            <Button variant="ghost" size="icon" asChild>
+              <Link href="/graph">
+                <Network className="h-4 w-4" />
+                <span className="sr-only">Graph View</span>
+              </Link>
+            </Button>
           </div>
           <div className="flex items-center gap-4">
             <Button 
