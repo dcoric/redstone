@@ -23,6 +23,13 @@
         "test": {
             "dependsOn": [
                 "^build"
+            ],
+            "env": [
+                "DATABASE_URL",
+                "JWT_SECRET",
+                "NEXTAUTH_SECRET",
+                "NEXTAUTH_URL",
+                "NODE_ENV"
             ]
         }
     }

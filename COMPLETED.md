@@ -317,3 +317,42 @@ This document archives completed phases and implementation details. See [PLAN.md
 
 **Archive Date:** 2025-12-18
 **Status at Archive:** Phase 4 Core Complete - File CRUD operations fully functional
+
+---
+
+## Phase 4.5 - Web/API Verification ✅ (Complete)
+
+**Completed: 2026-05-15**
+
+- Auth, file/folder/tag CRUD, search, and API contract verification against `API.md`
+- Verification branches merged; acceptance criteria documented in commit history
+
+---
+
+## Phase 6 - Advanced Web Features ✅ (Complete)
+
+**Completed: 2026-05** (merged to `main` via PRs #14–#19, #32, #33)
+
+### Shipped
+- Wiki-style internal links with autocomplete, backlinks, and broken-link warnings
+- Server-Sent Events (SSE) for real-time file list updates
+- Interactive graph view (`react-force-graph-2d`) with tag/folder filters
+- Markdown import and HTML export
+- File attachments (Prisma model + upload API)
+- Optional Vim keybindings in CodeMirror editor
+
+### Key locations
+- [apps/web/lib/wiki-links.ts](apps/web/lib/wiki-links.ts)
+- [apps/web/lib/event-stream.ts](apps/web/lib/event-stream.ts)
+- [apps/web/app/graph/page.tsx](apps/web/app/graph/page.tsx)
+- [apps/web/app/api/attachments/route.ts](apps/web/app/api/attachments/route.ts)
+
+---
+
+## Pre-Mobile Hardening 🔄 (In Progress)
+
+**Started: 2026-05-18**
+
+- GitHub Actions CI workflow (build, lint, migrate, seed, Vitest API tests)
+- Prisma client generation wired into install/build pipeline
+- Phase 5 (mobile) explicitly deferred until hardening checklist is complete

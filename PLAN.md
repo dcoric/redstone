@@ -30,32 +30,33 @@ We use Next.js for both frontend and backend (API routes) to simplify deployment
 
 ## Current Status
 
-**✅ Phase 4 Complete** - All web frontend features implemented (file CRUD, folders, tags, search)
+**✅ Phase 6 Complete** — Advanced web features shipped. **🔄 Pre-Mobile Hardening** — CI, tests, and stability before Phase 5.
 
 ### What's Working
-- ✅ Full-stack authentication (web + mobile-ready API)
-- ✅ File management (create, read, update, delete, version history)
-- ✅ Folder organization with nested structure (create, rename, delete)
-- ✅ Tag management (add, remove tags from files with autocomplete)
-- ✅ Search functionality with highlighting and context
-- ✅ Real-time UI updates with SWR
-- ✅ Markdown editor with live preview (CodeMirror 6)
-- ✅ Type-safe API client with comprehensive types
-- ✅ Keyboard accessibility throughout UI
-- ✅ Production build passing with zero errors
+- ✅ Full-stack authentication (NextAuth web + JWT for API/mobile clients)
+- ✅ File management (CRUD, version history, import/export)
+- ✅ Folder organization with nested structure
+- ✅ Tag management with autocomplete
+- ✅ Search with highlighting and context
+- ✅ Wiki-style internal links (`[[title]]`), backlinks, broken-link detection
+- ✅ Real-time sync via Server-Sent Events (SSE) with connection status
+- ✅ Interactive graph view (force-directed, tag/folder filters)
+- ✅ File attachments (upload API + Prisma model)
+- ✅ Markdown editor with live preview, optional Vim keybindings
+- ✅ Type-safe API client and SWR data layer
+- ✅ GitHub Actions CI (build, lint, migrate, API tests)
 
-### What's Next
-- [ ] Web/API verification gate (Phase 4.5)
-- [ ] Mobile app (Phase 5)
-- [ ] Advanced features (Phase 6)
-- [ ] Desktop app (Phase 7)
+### What's Next (priority order)
+- [ ] **Pre-Mobile Hardening** (current) — expand test coverage, fix Next.js warnings, keep CI green
+- [ ] **Phase 5 — Mobile app** (deferred until hardening is done)
+- [ ] **Phase 7 — Desktop app** (Electron)
 
 ---
 
 ## Architecture
 
 ### Stack
-- **Frontend**: Next.js 14+ (App Router), React, TypeScript
+- **Frontend**: Next.js 16 (App Router), React, TypeScript
 - **Backend**: Next.js API Routes
 - **Database**: PostgreSQL 15+ with Prisma ORM
 - **Auth**: NextAuth.js (web) + JWT (mobile)
@@ -68,19 +69,20 @@ We use Next.js for both frontend and backend (API routes) to simplify deployment
 redstone/
 ├── apps/
 │   ├── web/                 # Next.js app (frontend + API)
-│   └── mobile/              # Expo app (planned)
+│   └── mobile/              # Expo app (scaffold — Phase 5, deferred)
 ├── packages/
 │   ├── shared/              # Shared types and utilities
 │   ├── database/            # Prisma schema and client
-│   ├── api-client/          # API client (planned)
-│   └── markdown/            # Markdown utilities (planned)
+│   ├── api-client/          # Shared API client
+│   └── markdown/            # Markdown utilities
+├── .github/workflows/       # CI (build, lint, test)
 ├── PLAN.md                  # This file (current plan)
 ├── COMPLETED.md             # Completed phases archive
 └── IMPROVEMENTS.md          # Code quality improvements log
 ```
 
 ### Database Schema
-**Core Models**: User, File, Folder, FileVersion, Tag, FileTag
+**Core Models**: User, File, Folder, FileVersion, Tag, FileTag, Attachment
 
 **Key Features**:
 - Soft deletes (`deletedAt`) for sync support
@@ -120,6 +122,12 @@ redstone/
 #### Utilities
 - `GET /api/search?q=query` - Full-text search
 - `GET /api/sync?since=timestamp` - Mobile sync (incremental)
+- `GET /api/events` - SSE stream for live updates
+- `GET /api/graph` - Graph view data (nodes + wiki-link edges)
+- `GET /api/files/:id/backlinks` - Files linking to this note
+- `POST /api/files/import` - Import markdown files
+- `GET /api/files/:id/export` - Export file as HTML
+- `POST /api/attachments` - Upload image/PDF attachments
 
 ---
 
@@ -175,9 +183,31 @@ Goal: confirm all web and API behaviors are stable before starting mobile.
 
 ---
 
+### Pre-Mobile Hardening (current)
+
+**Priority: High** | **Effort: Medium** | **Goal: stable web/API before Expo work**
+
+#### Done
+- [x] GitHub Actions CI (PostgreSQL service, migrate, seed, build, lint, test)
+- [x] Prisma `generate` in install/build pipeline (`postinstall` + `@redstone/database` build task)
+- [x] API integration tests (auth, files CRUD, folders, search) via Vitest
+
+#### Remaining
+- [ ] Expand API tests (tags, graph, attachments, SSE smoke)
+- [ ] Resolve 34 ESLint warnings in `apps/web` (re-enable `no-explicit-any` as error when clean)
+- [ ] Resolve Next.js 16 warnings (`turbopack.root`, middleware → proxy migration)
+- [ ] Keep `PLAN.md` / `API.md` aligned with implemented endpoints
+- [ ] Optional: E2E smoke (Playwright) for auth + editor save path
+
+---
+
 ### Phase 5 - Mobile App
 
+**Status: Deferred** — start only after Pre-Mobile Hardening checklist is complete.
+
 **Priority: Medium** | **Effort: High** | **Time: 1-2 weeks**
+
+> Expo scaffold exists (`apps/mobile`) with offline SQLite; not in active development until web/API hardening is done.
 
 #### Tasks
 - [ ] Set up Expo project with TypeScript
@@ -206,44 +236,22 @@ Goal: confirm all web and API behaviors are stable before starting mobile.
 
 ---
 
-### Phase 6 - Advanced Features
+### Phase 6 - Advanced Features ✅ (Complete)
 
-**Priority: Low** | **Effort: High** | **Time: 2-3 weeks**
+**Completed on `main`** (PRs #14–#19, wiki links #32, realtime #33)
 
-#### Planned Features
-- [ ] **Internal Links**: Wiki-style `[[filename]]` links
-  - Link autocomplete
-  - Backlinks view
-  - Link validation
-  - Navigation between linked files
+- [x] **Internal Links**: `[[filename]]`, autocomplete, backlinks, broken-link detection
+- [x] **Real-time Sync**: SSE (`/api/events`) + connection status in UI
+- [x] **Graph View**: Force-directed graph, tag/folder filters
+- [x] **Export/Import**: HTML export, markdown import
+- [x] **Attachments**: Upload API + local storage (images/PDF)
+- [x] **Editor**: Optional Vim keybindings toggle
 
-- [ ] **Real-time Sync**: Live updates across devices
-  - WebSockets or Server-Sent Events (SSE)
-  - Operational transformation or CRDT for conflicts
-  - Live collaboration (future)
-
-- [ ] **Graph View**: Visualize file connections
-  - Interactive network graph
-  - Filter by tags/folders
-  - Node clustering
-
-- [ ] **Export/Import**:
-  - Export to PDF/HTML
-  - Import from Obsidian/Markdown files
-  - Batch operations
-
-- [ ] **Attachments**: Image and file support
-  - Upload to S3 or local storage
-  - Drag-drop upload
-  - Image preview and optimization
-  - Attachment management
-
-- [ ] **Advanced Editor Features**:
-  - Vim/Emacs keybindings
-  - Command palette (Cmd+P)
-  - Table editor (WYSIWYG)
-  - Math equations (KaTeX)
-  - Code block language detection
+#### Future enhancements (not scoped)
+- [ ] Command palette (Cmd+P)
+- [ ] KaTeX math, WYSIWYG tables
+- [ ] S3-backed attachments, drag-drop in editor
+- [ ] CRDT / OT for multi-user collaboration
 
 ---
 
@@ -281,8 +289,9 @@ pnpm install
 # Start database
 docker-compose up -d
 
-# Run migrations
-pnpm --filter @redstone/database prisma migrate dev
+# Generate client and run migrations
+pnpm --filter @redstone/database db:generate
+pnpm --filter @redstone/database db:migrate
 
 # Start web app
 pnpm dev:web
@@ -291,17 +300,21 @@ pnpm dev:web
 # Test user: test@redstone.app / password123
 ```
 
-### Build
+### Build & CI
 ```bash
-# Build for production
+# Build for production (runs prisma generate via workspace deps)
 pnpm build
-
-# Check TypeScript
-pnpm type-check
 
 # Lint
 pnpm lint
+
+# API integration tests (requires Postgres + seed)
+pnpm --filter @redstone/database db:migrate:deploy
+pnpm --filter @redstone/database db:seed
+pnpm test
 ```
+
+CI runs the same steps on every push/PR to `main` (see `.github/workflows/ci.yml`).
 
 ---
 
@@ -327,7 +340,7 @@ pnpm lint
 - **Type Safety**: Comprehensive type definitions for all API interactions
 - **Error Handling**: User-friendly error messages throughout
 - **Accessibility**: Keyboard navigation, ARIA labels, focus management
-- **Testing**: Production build must pass with zero errors
+- **Testing**: Vitest API integration tests + production build must pass in CI
 
 ### Git Workflow
 - Keep commits atomic and well-described
@@ -351,6 +364,6 @@ pnpm lint
 
 ---
 
-**Last Updated:** 2025-12-18
-**Current Phase:** Phase 4 Complete → Phase 5 (Mobile App)
-**Next Milestone:** Begin mobile app development with Expo
+**Last Updated:** 2026-05-18
+**Current Phase:** Pre-Mobile Hardening
+**Next Milestone:** Expand test coverage and stabilize CI, then Phase 5 (Mobile App)

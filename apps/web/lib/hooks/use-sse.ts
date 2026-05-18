@@ -6,7 +6,7 @@ type SSEEvent = 'connected' | 'file:created' | 'file:updated' | 'file:deleted';
 
 interface SSEMessage {
   event: SSEEvent;
-  data: any;
+  data: unknown;
 }
 
 interface UseSSEOptions {
@@ -22,6 +22,7 @@ export function useSSE(options: UseSSEOptions = {}) {
   const [lastEvent, setLastEvent] = useState<SSEEvent | null>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
   const reconnectTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const connectRef = useRef<() => void>(() => {});
 
   const connect = useCallback(() => {
     if (!enabled) return;
@@ -58,12 +59,16 @@ export function useSSE(options: UseSSEOptions = {}) {
       eventSource.close();
 
       reconnectTimerRef.current = setTimeout(() => {
-        connect();
+        connectRef.current();
       }, 5000);
     };
 
     eventSourceRef.current = eventSource;
   }, [enabled, onFileChanged, onConnected, onDisconnected]);
+
+  useEffect(() => {
+    connectRef.current = connect;
+  }, [connect]);
 
   useEffect(() => {
     connect();
