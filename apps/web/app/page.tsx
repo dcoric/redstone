@@ -196,13 +196,13 @@ export default function Home() {
     <div className="flex h-screen bg-background">
       <Sidebar onFolderSelect={setSelectedFolderId} />
       <main className="flex flex-1 flex-col overflow-hidden">
-        <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-6">
+        <header className="flex h-14 items-center gap-4 border-b border-border bg-muted px-6">
           <div className="flex flex-1 items-center gap-4">
             <div className="relative flex-1 md:grow-0">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 type="search"
-                placeholder="Search files..."
+                placeholder="Search knowledge..."
                 className="w-full rounded-lg bg-background pl-8 pr-8 md:w-[200px] lg:w-[320px]"
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
@@ -286,7 +286,13 @@ export default function Home() {
             </DropdownMenu>
           </div>
         </header>
-        <div className="flex-1 overflow-auto p-4 sm:p-6">
+        <div className="flex-1 overflow-auto p-6">
+          {!showSearchResults && (
+            <div className="mb-6">
+              <h2 className="text-2xl font-semibold tracking-tight">Knowledge Graph</h2>
+              <p className="text-sm text-muted-foreground">All your notes in one place</p>
+            </div>
+          )}
           {showSearchResults ? (
             <div className="space-y-4">
               <div className="flex items-center justify-between text-sm text-muted-foreground">

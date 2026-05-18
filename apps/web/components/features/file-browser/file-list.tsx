@@ -1,9 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { FileText, MoreVertical, Loader2 } from "lucide-react"
+import { MoreVertical, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import {
     DropdownMenu,
@@ -14,7 +13,7 @@ import {
 import { useFiles } from "@/lib/hooks/use-files"
 import { filesApi } from "@/lib/api-client"
 import { useRouter } from "next/navigation"
-import type { File } from "@/lib/types"
+import type { FileWithRelations } from "@/lib/types"
 
 interface FileListProps extends React.HTMLAttributes<HTMLDivElement> {
     folderId?: string | null
@@ -31,7 +30,7 @@ export function FileList({ className, folderId, ...props }: FileListProps) {
 
         try {
             await filesApi.delete(fileId)
-            await mutate() // Refresh the file list
+            await mutate()
         } catch (error) {
             console.error("Failed to delete file:", error)
             alert("Failed to delete file. Please try again.")
@@ -61,14 +60,16 @@ export function FileList({ className, folderId, ...props }: FileListProps) {
 
     if (files.length === 0) {
         return (
-            <div className={cn("flex items-center justify-center p-8", className)} {...props}>
-                <span className="text-sm text-muted-foreground">No files found. Create a new file to get started.</span>
+            <div className={cn("flex flex-col items-center justify-center p-12 text-center", className)} {...props}>
+                <span className="material-symbols-outlined mb-4 text-4xl text-muted-foreground">description</span>
+                <p className="text-sm font-medium">No files in this folder</p>
+                <p className="mt-1 text-xs text-muted-foreground">Create a note or import markdown to get started</p>
             </div>
         )
     }
 
     return (
-        <div className={cn("grid gap-4 p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4", className)} {...props}>
+        <div className={cn("grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3", className)} {...props}>
             {files.map((file) => (
                 <FileCard key={file.id} file={file} onDelete={handleDelete} onClick={handleFileClick} />
             ))}
@@ -81,7 +82,7 @@ function FileCard({
     onDelete,
     onClick
 }: {
-    file: File
+    file: FileWithRelations
     onDelete: (id: string) => void
     onClick: (id: string) => void
 }) {
@@ -109,31 +110,29 @@ function FileCard({
         return date.toLocaleDateString()
     }
 
+    const preview = (file.content || '').replace(/^#+\s*/gm, '').trim().slice(0, 180)
+    const tags = file.tags?.map((t) => t.tag) ?? []
+
     return (
-        <Card
-            className="overflow-hidden transition-all hover:shadow-md cursor-pointer focus-within:ring-2 focus-within:ring-ring"
+        <article
+            className="group flex cursor-pointer flex-col rounded-xl border border-border bg-card p-6 transition-all hover:border-primary/50 hover:shadow-lg hover:shadow-black/20 focus-within:ring-2 focus-within:ring-primary"
             onClick={handleClick}
             onKeyDown={handleKeyDown}
             tabIndex={0}
             role="button"
             aria-label={`Open ${file.title}`}
         >
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2">
-                <div className="flex items-center space-x-2 flex-1 min-w-0">
-                    <FileText className="h-4 w-4 text-blue-500 shrink-0" />
-                    <CardTitle className="text-base font-medium truncate" title={file.title}>
-                        {file.title}
-                    </CardTitle>
-                </div>
+            <div className="mb-4 flex items-start justify-between">
+                <span className="material-symbols-outlined text-3xl text-primary">description</span>
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                        <Button variant="ghost" className="h-8 w-8 p-0 shrink-0">
+                        <Button variant="ghost" className="h-8 w-8 p-0 text-muted-foreground hover:text-primary">
                             <MoreVertical className="h-4 w-4" />
                             <span className="sr-only">Open menu</span>
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                        <DropdownMenuItem 
+                        <DropdownMenuItem
                             className="text-destructive"
                             onClick={(e) => {
                                 e.stopPropagation()
@@ -144,12 +143,36 @@ function FileCard({
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
-            </CardHeader>
-            <CardContent className="p-4 pt-2">
-                <div className="text-xs text-muted-foreground">
-                    Edited {formatDate(file.updatedAt)}
+            </div>
+            <h3 className="mb-2 text-lg font-semibold transition-colors group-hover:text-primary line-clamp-1">
+                {file.title}
+            </h3>
+            {preview && (
+                <p className="mb-4 line-clamp-3 flex-1 text-sm text-muted-foreground">{preview}</p>
+            )}
+            <div className="mt-auto space-y-3">
+                {tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                        {tags.slice(0, 4).map((tag) => (
+                            <span
+                                key={tag.id}
+                                className="rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary"
+                            >
+                                {tag.name}
+                            </span>
+                        ))}
+                    </div>
+                )}
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    {file.folder?.name && (
+                        <span className="flex items-center gap-1">
+                            <span className="material-symbols-outlined text-sm">folder</span>
+                            {file.folder.name}
+                        </span>
+                    )}
+                    <span>Edited {formatDate(file.updatedAt)}</span>
                 </div>
-            </CardContent>
-        </Card>
+            </div>
+        </article>
     )
 }
