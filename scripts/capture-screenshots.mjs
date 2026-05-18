@@ -41,12 +41,15 @@ await Promise.all([
 await page.waitForTimeout(1000);
 await shot(page, '02-home.png', { fullPage: true });
 
-const fileLink = page.getByRole('button', { name: /Open / }).first();
-if (await fileLink.count()) {
-  await fileLink.click();
-  await page.waitForTimeout(1500);
-  await shot(page, '03-file-editor.png', { fullPage: true });
-}
+const fileCard = page.getByRole('button', { name: /Open / }).first();
+await fileCard.waitFor({ state: 'visible', timeout: 20000 });
+await Promise.all([
+  page.waitForURL(/\/files\/[^/]+$/, { timeout: 20000 }),
+  fileCard.click(),
+]);
+await page.getByRole('button', { name: 'Save' }).waitFor({ state: 'visible', timeout: 20000 });
+await page.waitForTimeout(1000);
+await shot(page, '03-file-editor.png');
 
 await goto(`${baseUrl}/graph`);
 await page.waitForTimeout(2000);
