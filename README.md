@@ -1,14 +1,35 @@
 # Redstone
 
-An Obsidian-like knowledge management application with markdown support, folder organization, and multi-device sync.
+An Obsidian-like knowledge management application with markdown support, folder organization, wiki links, graph view, and multi-device sync.
+
+The web app uses a **Redstone Vault** dark UI (navy background, orange accents) based on the [Stitch](https://stitch.withgoogle.com) design system. See [DESIGN.md](DESIGN.md) for tokens and screen specs.
+
+## Screenshots
+
+| Sign in | Dashboard |
+| --- | --- |
+| ![Sign in](docs/screenshots/01-signin.png) | ![Dashboard](docs/screenshots/02-home.png) |
+
+| File editor | Graph view |
+| --- | --- |
+| ![File editor](docs/screenshots/03-file-editor.png) | ![Graph view](docs/screenshots/04-graph-view.png) |
+
+Regenerate locally (dev server must be running):
+
+```bash
+node scripts/capture-screenshots.mjs
+```
+
+Requires [Playwright](https://playwright.dev/) Chromium (`npx playwright install chromium`).
 
 ## Tech Stack
 
 - **Monorepo**: pnpm workspaces + Turborepo
-- **Web**: Next.js 16 (App Router) with TypeScript
-- **Mobile**: Expo React Native (in progress)
+- **Web**: Next.js 16 (App Router), React, TypeScript, Tailwind CSS, shadcn/ui
+- **Mobile**: Expo React Native (deferred — see [PLAN.md](PLAN.md))
 - **Database**: PostgreSQL 15+ with Prisma ORM
-- **Authentication**: NextAuth.js (web) + JWT (mobile)
+- **Authentication**: NextAuth.js (web) + JWT (mobile API)
+- **CI**: GitHub Actions (lint, build, migrate, API tests)
 
 ## Project Structure
 
@@ -16,16 +37,20 @@ An Obsidian-like knowledge management application with markdown support, folder 
 redstone/
 ├── apps/
 │   ├── web/              # Next.js web application
-│   └── mobile/           # Expo mobile app (in progress)
+│   └── mobile/           # Expo mobile app (planned)
 ├── packages/
 │   ├── shared/           # Shared TypeScript types and utilities
 │   ├── database/         # Prisma schema and client
 │   ├── api-client/       # Shared API client
 │   └── markdown/         # Markdown utilities
-├── docker/               # Docker configuration
-│   └── docker-compose.yml
-├── PLAN.md              # Detailed development plan
-└── API.md               # API documentation
+├── docker/               # Docker Compose (PostgreSQL)
+├── docs/screenshots/     # UI screenshots for README / PRs
+├── scripts/              # Stitch export, screenshot capture
+├── DESIGN.md             # Design tokens and screen inventory
+├── DESIGN_PLAN.md        # Stitch prompts per screen
+├── PLAN.md               # Development plan
+├── COMPLETED.md          # Archived implementation notes
+└── API.md                # API documentation
 ```
 
 ## Getting Started
@@ -39,28 +64,33 @@ redstone/
 ### Installation
 
 1. Clone the repository:
+
 ```bash
-git clone <repository-url>
+git clone https://github.com/dcoric/redstone.git
 cd redstone
 ```
 
 2. Install dependencies:
+
 ```bash
 pnpm install
 ```
 
-3. Start PostgreSQL database:
+3. Start PostgreSQL:
+
 ```bash
-cd docker && docker-compose up -d
+cd docker && docker compose up -d
 ```
 
 4. Set up environment variables:
+
 ```bash
 cp .env.example apps/web/.env.local
-# Edit apps/web/.env.local if needed
+# Edit apps/web/.env.local if needed (NEXTAUTH_SECRET, DATABASE_URL)
 ```
 
 5. Run database migrations and seed:
+
 ```bash
 pnpm --filter @redstone/database db:generate
 pnpm --filter @redstone/database db:migrate
@@ -68,179 +98,106 @@ pnpm --filter @redstone/database db:seed
 ```
 
 6. Start the development server:
+
 ```bash
 pnpm dev:web
 ```
 
-The web app will be available at [http://localhost:3000](http://localhost:3000)
+Open [http://localhost:3000](http://localhost:3000).
 
-## Test Credentials
+### Test credentials
 
-After running the seed script, you can use:
+After seeding:
+
 - **Email**: `test@redstone.app`
 - **Password**: `password123`
 
 ## Development Commands
 
 ```bash
-# Run all apps
-pnpm dev
+# Run apps
+pnpm dev              # All apps (turbo)
+pnpm dev:web          # Next.js web app only
+pnpm dev:mobile       # Expo (when Phase 5 starts)
 
-# Run specific apps
-pnpm dev:web          # Next.js web app
-pnpm dev:mobile       # Expo mobile app (when ready)
+# Database
+pnpm --filter @redstone/database db:generate
+pnpm --filter @redstone/database db:migrate
+pnpm --filter @redstone/database db:seed
+pnpm --filter @redstone/database db:studio
 
-# Database commands
-pnpm --filter @redstone/database db:generate    # Generate Prisma client
-pnpm --filter @redstone/database db:migrate     # Run migrations
-pnpm --filter @redstone/database db:seed        # Seed database
-pnpm --filter @redstone/database db:studio      # Open Prisma Studio
-
-# Build
-pnpm build            # Build all apps
-
-# Test
-pnpm test             # Run tests
-
-# Lint
-pnpm lint             # Lint all packages
+# Quality
+pnpm build            # Build all packages
+pnpm test             # Run tests (includes API route tests in apps/web)
+pnpm lint             # ESLint across the monorepo
 ```
 
 ## Features
 
-### Implemented ✅
+### Core
 
-- **Authentication**
-  - User registration and login
-  - NextAuth.js for web (cookie-based)
-  - JWT tokens for mobile API access
+- User registration and login (NextAuth on web, JWT for API/mobile clients)
+- Markdown files with versioning and soft deletes
+- Nested folders, tags, and full-text search
+- Wiki-style `[[links]]`, backlinks, and broken-link detection
+- Real-time updates via Server-Sent Events (SSE)
+- Import / export (vault and single files)
+- File attachments (API + database model)
 
-- **File Management**
-  - Create, read, update, delete files
-  - Markdown content support
-  - Automatic versioning on content changes
-  - Search by title and content
-  - Soft deletes for sync
+### Web UI
 
-- **Folder Organization**
-  - Create nested folders
-  - Move files between folders
-  - Tree structure with file counts
+- **Vault design**: sign-in/sign-up, sidebar, bento-style file cards, graph canvas
+- Markdown editor with live preview and optional Vim keybindings
+- Interactive force-directed **graph view** with tag/folder filters
+- Folder tree with CRUD, inline rename, and context menus
+- Tag management on the file editor
+- Search with highlighting
 
-- **Tag System**
-  - Add/remove tags from files
-  - Auto-create tags
-  - Tag-based organization
+### In progress / planned
 
-- **Sync API**
-  - Incremental sync for mobile
-  - Change tracking since timestamp
+- **Pre-mobile hardening** — broader test coverage, Next.js/Turbopack config cleanup
+- **Mobile app** (Phase 5) — Expo, offline sync
+- **Desktop app** (Phase 7) — Electron
 
-### Implemented (Frontend) ✅
+See [PLAN.md](PLAN.md) for the full roadmap and [COMPLETED.md](COMPLETED.md) for shipped work.
 
-- **Authentication UI**
-  - Login and signup pages
-  - Session management with NextAuth
-  - Route protection middleware
-  - User menu with logout
+## Design & Stitch
 
-- **API Client & Hooks**
-  - Typed API client with authenticated requests
-  - SWR hooks for data fetching (useFiles, useFolders, useAuth)
-  - Automatic cookie handling for NextAuth sessions
-
-- **UI Components**
-  - File browser interface with real-time data
-  - Markdown editor with live preview (CodeMirror 6)
-  - Folder navigation sidebar with tree structure
-  - File creation, editing, and deletion
-  - Folder-based file filtering
-  - Search interface (UI ready)
-
-### Implemented (Data Integration) ✅
-
-- **File Operations**
-  - Create new files with "New File" button
-  - Load and edit files in markdown editor
-  - Save file changes with auto-detection of unsaved changes
-  - Delete files with confirmation dialog
-  - Navigate to files by clicking file cards
-  - Real-time file list updates
-
-- **Folder Integration**
-  - Load folder tree from API
-  - Filter files by selected folder
-  - Display file counts per folder
-  - "All Files" view for root level
-
-### Planned 🚧
-
-- **Web Frontend** (Remaining Features)
-  - Implement search functionality
-  - Add tag management UI
-  - Folder creation/deletion UI
-
-- **Mobile App** (Phase 5)
-  - Expo React Native app
-  - Offline support
-  - Mobile-optimized editor
-
-- **Advanced Features** (Phase 6)
-  - Real-time sync (WebSockets/SSE)
-  - Internal linking between files
-  - File attachments
-  - Export to PDF/HTML
-  - Graph view of connections
+- [DESIGN.md](DESIGN.md) — colors, typography, components, screen list (for Stitch or other tools)
+- [DESIGN_PLAN.md](DESIGN_PLAN.md) — per-screen Stitch prompts
+- `scripts/fetch-stitch-project.mjs` — export screens from a Stitch project via `@google/stitch-sdk`
 
 ## API Documentation
 
-See [API.md](API.md) for complete API documentation.
+See [API.md](API.md).
 
-Quick example:
 ```bash
-# Login
+# JWT login (mobile / API clients)
 curl -X POST http://localhost:3000/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"test@redstone.app","password":"password123"}'
-
-# Get files (use token from login response)
-curl -X GET http://localhost:3000/api/files \
-  -H "Authorization: Bearer <your-token>"
 ```
 
-## Database Schema
+Web sessions use NextAuth cookies after signing in through the UI.
 
-Key models:
-- **User**: User accounts
-- **File**: Markdown files with content
-- **Folder**: Nested folder structure
-- **FileVersion**: Version history for files
-- **Tag**: User-created tags
-- **FileTag**: Many-to-many relationship between files and tags
+## Database
 
-See [packages/database/prisma/schema.prisma](packages/database/prisma/schema.prisma) for the complete schema.
+Key models: **User**, **File**, **Folder**, **FileVersion**, **Tag**, **FileTag**, **Attachment**.
+
+Schema: [packages/database/prisma/schema.prisma](packages/database/prisma/schema.prisma)
 
 ## Project Status
 
-✅ **Phase 1 Complete**: Monorepo setup
-✅ **Phase 2 Complete**: Core backend API
-✅ **Phase 3 Complete**: Web frontend UI components
-✅ **Phase 4 Complete**: Web frontend API integration
-  - ✅ Authentication & infrastructure (production-ready)
-    - Full type safety (zero `any` types)
-    - SWR hooks and configuration
-    - NextAuth v5 compatible middleware
-    - Error boundaries
-    - Build passing with zero errors
-  - ✅ Data integration (wire UI to API endpoints)
-    - File CRUD operations fully functional
-    - Folder navigation connected to API
-    - Real-time data fetching and updates
-    - Loading and error states
-⏳ **Phase 5 Planned**: Mobile app
-⏳ **Phase 6 Planned**: Advanced features (search, tags UI, folder management)
-
-See [PLAN.md](PLAN.md) for detailed implementation plan and [IMPROVEMENTS.md](IMPROVEMENTS.md) for recent code quality improvements.
+| Phase | Status |
+| --- | --- |
+| 1 — Foundation | ✅ Complete |
+| 2 — Core API | ✅ Complete |
+| 3–4 — Web UI & API integration | ✅ Complete |
+| 4.5 — Verification | ✅ Complete |
+| 6 — Advanced web features | ✅ Complete |
+| Pre-mobile hardening | 🔄 In progress |
+| 5 — Mobile | ⏳ Deferred |
+| 7 — Desktop | ⏳ Planned |
 
 ## License
 
