@@ -78,6 +78,27 @@ describe('files API', () => {
     );
     expect(updateResponse.status).toBe(200);
 
+    const foldersResponse = await foldersGET(
+      apiRequest('/api/folders', { token: authToken })
+    );
+    const { folders } = await readJson<{ folders: { id: string; name: string }[] }>(
+      foldersResponse
+    );
+    const targetFolder = folders.find((f) => f.name === 'My Notes');
+    expect(targetFolder).toBeDefined();
+
+    const moveResponse = await filePUT(
+      apiRequest(`/api/files/${fileId}`, {
+        method: 'PUT',
+        token: authToken,
+        body: jsonBody({ folderId: targetFolder!.id }),
+      }),
+      { params: Promise.resolve({ id: fileId }) }
+    );
+    expect(moveResponse.status).toBe(200);
+    const moved = await readJson<{ file: { folderId: string | null } }>(moveResponse);
+    expect(moved.file.folderId).toBe(targetFolder!.id);
+
     const deleteResponse = await fileDELETE(
       apiRequest(`/api/files/${fileId}`, {
         method: 'DELETE',
