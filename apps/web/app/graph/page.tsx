@@ -71,7 +71,7 @@ export default function GraphPage() {
 
   return (
     <div className="flex h-screen flex-col bg-background">
-      <header className="flex h-14 items-center justify-between border-b px-4 bg-muted/40">
+      <header className="flex h-14 items-center justify-between border-b border-border px-4 bg-muted">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" asChild>
             <Link href="/">
@@ -156,7 +156,7 @@ export default function GraphPage() {
         </div>
       )}
 
-      <div className="flex-1 relative">
+      <div className="relative flex-1 graph-canvas-bg">
         <ForceGraph2D
           graphData={{ nodes: filteredNodes, links: filteredEdges }}
           nodeLabel="label"

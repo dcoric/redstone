@@ -166,7 +166,7 @@ export function Sidebar({ className, onFolderSelect, ...props }: SidebarProps) {
 
     if (isLoading) {
         return (
-            <div className={cn("w-64 border-r bg-muted/10 pb-12", className)} {...props}>
+            <div className={cn("w-[280px] border-r border-border bg-muted pb-12", className)} {...props}>
                 <div className="flex items-center justify-center p-8">
                     <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                 </div>
@@ -176,7 +176,7 @@ export function Sidebar({ className, onFolderSelect, ...props }: SidebarProps) {
 
     if (isError) {
         return (
-            <div className={cn("w-64 border-r bg-muted/10 pb-12", className)} {...props}>
+            <div className={cn("w-[280px] border-r border-border bg-muted pb-12", className)} {...props}>
                 <div className="p-4">
                     <p className="text-sm text-destructive">Failed to load folders</p>
                 </div>
@@ -185,11 +185,15 @@ export function Sidebar({ className, onFolderSelect, ...props }: SidebarProps) {
     }
 
     return (
-        <div className={cn("w-64 border-r bg-muted/10 pb-12", className)} {...props}>
-            <div className="space-y-4 py-4">
+        <div className={cn("w-[280px] border-r border-border bg-muted pb-12", className)} {...props}>
+            <div className="flex h-full flex-col space-y-4 py-4">
+                <div className="px-4 pb-2">
+                    <h1 className="text-lg font-bold text-primary">Redstone Vault</h1>
+                    <p className="text-xs text-muted-foreground">Knowledge Garden</p>
+                </div>
                 <div className="px-3 py-2">
                     <div className="mb-2 flex items-center justify-between px-4">
-                        <h2 className="text-lg font-semibold tracking-tight">
+                        <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                             Folders
                         </h2>
                         <Button
@@ -213,7 +217,7 @@ export function Sidebar({ className, onFolderSelect, ...props }: SidebarProps) {
                             }}
                             className={cn(
                                 "group flex w-full items-center rounded-md px-2 py-1.5 text-sm font-medium hover:bg-accent hover:text-accent-foreground",
-                                selectedFolderId === null && "bg-accent"
+                                selectedFolderId === null && "bg-accent border-l-2 border-primary text-primary"
                             )}
                         >
                             <span className="mr-1 h-4 w-4" />

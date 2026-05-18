@@ -1,22 +1,22 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
-import { SessionProvider } from "@/components/providers/session-provider";
-import { SWRProvider } from "@/components/providers/swr-provider";
+import type { Metadata } from 'next';
+import { Inter, JetBrains_Mono } from 'next/font/google';
+import './globals.css';
+import { SessionProvider } from '@/components/providers/session-provider';
+import { SWRProvider } from '@/components/providers/swr-provider';
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+const inter = Inter({
+  variable: '--font-inter',
+  subsets: ['latin'],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+const jetbrainsMono = JetBrains_Mono({
+  variable: '--font-jetbrains',
+  subsets: ['latin'],
 });
 
 export const metadata: Metadata = {
-  title: "Redstone - Knowledge Management",
-  description: "An Obsidian-like knowledge management application",
+  title: 'Redstone Vault — Knowledge Management',
+  description: 'An Obsidian-like knowledge management application',
 };
 
 export default function RootLayout({
@@ -25,9 +25,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="dark">
+      <head>
+        <link
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"
+          rel="stylesheet"
+        />
+      </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${inter.variable} ${jetbrainsMono.variable} antialiased`}
       >
         <SessionProvider>
           <SWRProvider>{children}</SWRProvider>

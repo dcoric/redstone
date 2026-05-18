@@ -3,9 +3,9 @@
 import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import Link from 'next/link';
+import { RedstoneLogo } from '@/components/brand/redstone-logo';
+import { Loader2 } from 'lucide-react';
 
 export default function SignInPage() {
   const router = useRouter();
@@ -32,7 +32,7 @@ export default function SignInPage() {
         router.push('/');
         router.refresh();
       }
-    } catch (err) {
+    } catch {
       setError('An error occurred. Please try again.');
     } finally {
       setIsLoading(false);
@@ -40,65 +40,116 @@ export default function SignInPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <div className="w-full max-w-md space-y-8 rounded-lg border bg-card p-8 shadow-lg">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold">Welcome back</h1>
-          <p className="mt-2 text-muted-foreground">
-            Sign in to your Redstone account
-          </p>
+    <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_center,#1e293b_0%,#0b1326_100%)] p-4">
+      <main className="relative flex w-full max-w-[390px] flex-col items-center overflow-hidden rounded-xl border border-border bg-card p-8 shadow-2xl">
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage:
+              'radial-gradient(circle at 2px 2px, #f1f5f9 1px, transparent 0)',
+            backgroundSize: '24px 24px',
+          }}
+        />
+        <div className="pointer-events-none absolute -bottom-8 -right-8 h-48 w-48 rounded-full bg-primary/5 blur-3xl" />
+        <div className="pointer-events-none absolute -top-12 -left-12 h-48 w-48 rounded-full bg-primary/5 blur-3xl" />
+
+        <div className="z-10 flex w-full flex-col items-center gap-4 pt-2">
+          <RedstoneLogo size={64} />
+          <div className="text-center">
+            <h1 className="text-2xl font-semibold tracking-tight">
+              Sign in to Redstone
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Continue your knowledge journey
+            </p>
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form
+          onSubmit={handleSubmit}
+          className="z-10 mt-8 flex w-full flex-col gap-6"
+        >
           {error && (
-            <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+            <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
               {error}
             </div>
           )}
 
-          <div className="space-y-2">
-            <label htmlFor="email" className="text-sm font-medium">
-              Email
+          <div className="flex flex-col gap-4">
+            <label className="flex flex-col gap-1.5" htmlFor="email">
+              <span className="ml-1 text-xs font-medium text-muted-foreground">
+                Email Address
+              </span>
+              <div className="relative">
+                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-lg text-muted-foreground">
+                  mail
+                </span>
+                <input
+                  id="email"
+                  type="email"
+                  placeholder="name@company.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  disabled={isLoading}
+                  className="w-full rounded-lg border border-border bg-background py-3 pl-11 pr-3 text-sm outline-none transition-all placeholder:text-muted-foreground focus:border-primary focus:ring-1 focus:ring-primary"
+                />
+              </div>
             </label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              disabled={isLoading}
-            />
+
+            <label className="flex flex-col gap-1.5" htmlFor="password">
+              <span className="ml-1 text-xs font-medium text-muted-foreground">
+                Password
+              </span>
+              <div className="relative">
+                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-lg text-muted-foreground">
+                  lock
+                </span>
+                <input
+                  id="password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  disabled={isLoading}
+                  className="w-full rounded-lg border border-border bg-background py-3 pl-11 pr-3 text-sm outline-none transition-all placeholder:text-muted-foreground focus:border-primary focus:ring-1 focus:ring-primary"
+                />
+              </div>
+            </label>
           </div>
 
-          <div className="space-y-2">
-            <label htmlFor="password" className="text-sm font-medium">
-              Password
-            </label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              disabled={isLoading}
-            />
-          </div>
-
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? 'Signing in...' : 'Sign in'}
-          </Button>
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-3 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/10 transition-all hover:bg-[#ea580c] active:scale-[0.98] disabled:opacity-50"
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Signing in...
+              </>
+            ) : (
+              <>
+                Sign in
+                <span className="material-symbols-outlined text-lg">
+                  arrow_forward
+                </span>
+              </>
+            )}
+          </button>
         </form>
 
-        <div className="text-center text-sm">
-          <span className="text-muted-foreground">Don't have an account? </span>
-          <Link href="/auth/signup" className="text-primary hover:underline">
-            Sign up
+        <p className="z-10 mt-8 pb-2 text-center text-sm text-muted-foreground">
+          New to the garden?{' '}
+          <Link
+            href="/auth/signup"
+            className="font-semibold text-primary hover:underline"
+          >
+            Create an account
           </Link>
-        </div>
-      </div>
+        </p>
+      </main>
     </div>
   );
 }
-
