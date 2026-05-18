@@ -1,17 +1,23 @@
 "use client"
 
 import * as React from "react"
-import { MoreVertical, Loader2 } from "lucide-react"
+import { MoreVertical, Loader2, Check } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuSub,
+    DropdownMenuSubContent,
+    DropdownMenuSubTrigger,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useFiles } from "@/lib/hooks/use-files"
+import { useFolders } from "@/lib/hooks/use-folders"
 import { filesApi } from "@/lib/api-client"
+import { buildFolderTree, flattenFolderTree } from "@/lib/folder-tree"
 import { useRouter } from "next/navigation"
 import type { FileWithRelations } from "@/lib/types"
 
@@ -21,7 +27,27 @@ interface FileListProps extends React.HTMLAttributes<HTMLDivElement> {
 
 export function FileList({ className, folderId, ...props }: FileListProps) {
     const { files, isLoading, isError, mutate } = useFiles({ folderId: folderId || undefined })
+    const { folders } = useFolders()
     const router = useRouter()
+    const [movingFileId, setMovingFileId] = React.useState<string | null>(null)
+
+    const foldersFlat = React.useMemo(
+        () => flattenFolderTree(buildFolderTree(folders)),
+        [folders]
+    )
+
+    const handleMove = async (fileId: string, targetFolderId: string | null) => {
+        setMovingFileId(fileId)
+        try {
+            await filesApi.update(fileId, { folderId: targetFolderId })
+            await mutate()
+        } catch (error) {
+            console.error("Failed to move file:", error)
+            alert("Failed to move file. Please try again.")
+        } finally {
+            setMovingFileId(null)
+        }
+    }
 
     const handleDelete = async (fileId: string) => {
         if (!confirm("Are you sure you want to delete this file?")) {
@@ -71,7 +97,15 @@ export function FileList({ className, folderId, ...props }: FileListProps) {
     return (
         <div className={cn("grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3", className)} {...props}>
             {files.map((file) => (
-                <FileCard key={file.id} file={file} onDelete={handleDelete} onClick={handleFileClick} />
+                <FileCard
+                    key={file.id}
+                    file={file}
+                    foldersFlat={foldersFlat}
+                    isMoving={movingFileId === file.id}
+                    onMove={handleMove}
+                    onDelete={handleDelete}
+                    onClick={handleFileClick}
+                />
             ))}
         </div>
     )
@@ -79,13 +113,26 @@ export function FileList({ className, folderId, ...props }: FileListProps) {
 
 function FileCard({
     file,
+    foldersFlat,
+    isMoving,
+    onMove,
     onDelete,
-    onClick
+    onClick,
 }: {
     file: FileWithRelations
+    foldersFlat: Array<{ folder: { id: string; name: string }; depth: number }>
+    isMoving: boolean
+    onMove: (fileId: string, folderId: string | null) => void
     onDelete: (id: string) => void
     onClick: (id: string) => void
 }) {
+    const currentFolderId = file.folderId ?? null
+
+    const handleMove = (e: React.MouseEvent, targetFolderId: string | null) => {
+        e.stopPropagation()
+        if (targetFolderId === currentFolderId) return
+        onMove(file.id, targetFolderId)
+    }
     const handleClick = () => onClick(file.id)
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -131,7 +178,50 @@ function FileCard({
                             <span className="sr-only">Open menu</span>
                         </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
+                    <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                        <DropdownMenuSub>
+                            <DropdownMenuSubTrigger disabled={isMoving}>
+                                {isMoving ? (
+                                    <>
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        Moving...
+                                    </>
+                                ) : (
+                                    "Move to folder"
+                                )}
+                            </DropdownMenuSubTrigger>
+                            <DropdownMenuSubContent className="max-h-64 overflow-y-auto">
+                                <DropdownMenuItem
+                                    onClick={(e) => handleMove(e, null)}
+                                    disabled={currentFolderId === null}
+                                >
+                                    <Check
+                                        className={cn(
+                                            "mr-2 h-4 w-4",
+                                            currentFolderId === null ? "opacity-100" : "opacity-0"
+                                        )}
+                                    />
+                                    No folder
+                                </DropdownMenuItem>
+                                {foldersFlat.map(({ folder, depth }) => (
+                                    <DropdownMenuItem
+                                        key={folder.id}
+                                        onClick={(e) => handleMove(e, folder.id)}
+                                        disabled={folder.id === currentFolderId}
+                                        style={{ paddingLeft: `${8 + depth * 12}px` }}
+                                    >
+                                        <Check
+                                            className={cn(
+                                                "mr-2 h-4 w-4 shrink-0",
+                                                folder.id === currentFolderId ? "opacity-100" : "opacity-0"
+                                            )}
+                                        />
+                                        <span className="truncate">{folder.name}</span>
+                                    </DropdownMenuItem>
+                                ))}
+                            </DropdownMenuSubContent>
+                        </DropdownMenuSub>
+                        <DropdownMenuSeparator />
                         <DropdownMenuItem
                             className="text-destructive"
                             onClick={(e) => {
