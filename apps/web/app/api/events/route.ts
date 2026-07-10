@@ -10,20 +10,31 @@ export async function GET(request: NextRequest) {
   }
 
   const encoder = new TextEncoder();
+  let unsubscribe: (() => void) | undefined;
+  let heartbeat: ReturnType<typeof setInterval> | undefined;
+
+  const close = () => {
+    unsubscribe?.();
+    unsubscribe = undefined;
+    if (heartbeat) {
+      clearInterval(heartbeat);
+      heartbeat = undefined;
+    }
+  };
 
   const stream = new ReadableStream({
     start(controller) {
-      const unsubscribe = subscribe((message) => {
+      unsubscribe = subscribe((message) => {
         if (controller.desiredSize == null || controller.desiredSize <= 0) {
-          unsubscribe();
+          close();
           return;
         }
         controller.enqueue(encoder.encode(message));
       });
 
-      setInterval(() => {
+      heartbeat = setInterval(() => {
         if (controller.desiredSize == null || controller.desiredSize <= 0) {
-          unsubscribe();
+          close();
           return;
         }
         controller.enqueue(encoder.encode(': heartbeat\n\n'));
@@ -32,7 +43,7 @@ export async function GET(request: NextRequest) {
       controller.enqueue(encoder.encode(`data: {"event":"connected","data":{"userId":"${userId}"}}\n\n`));
     },
     cancel() {
-      console.log('SSE connection closed');
+      close();
     },
   });
 
