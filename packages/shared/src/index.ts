@@ -76,6 +76,10 @@ export interface RegisterResponse {
   user: User;
 }
 
+export interface CurrentUserResponse {
+  user: User;
+}
+
 export interface FilesListResponse {
   files: File[];
   pagination: Pagination;

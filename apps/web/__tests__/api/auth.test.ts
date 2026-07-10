@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { POST as loginPOST } from '@/app/api/auth/login/route';
 import { POST as registerPOST } from '@/app/api/auth/register/route';
+import { GET as meGET } from '@/app/api/auth/me/route';
 import { apiRequest, jsonBody, readJson } from '../helpers';
 
 describe('POST /api/auth/login', () => {
@@ -49,6 +50,37 @@ describe('POST /api/auth/login', () => {
     }>(response);
     expect(body.token).toBeTruthy();
     expect(body.user.email).toBe('test@redstone.app');
+  });
+});
+
+describe('GET /api/auth/me', () => {
+  it('returns 401 without a valid session', async () => {
+    const response = await meGET(apiRequest('/api/auth/me'));
+    expect(response.status).toBe(401);
+  });
+
+  it('returns the current user for a valid JWT', async () => {
+    const loginResponse = await loginPOST(
+      apiRequest('/api/auth/login', {
+        method: 'POST',
+        body: jsonBody({
+          email: 'test@redstone.app',
+          password: 'password123',
+        }),
+      })
+    );
+    const login = await readJson<{ token: string }>(loginResponse);
+
+    const response = await meGET(
+      apiRequest('/api/auth/me', { token: login.token })
+    );
+    expect(response.status).toBe(200);
+    const body = await readJson<{
+      user: { email: string; createdAt: string; updatedAt: string };
+    }>(response);
+    expect(body.user.email).toBe('test@redstone.app');
+    expect(body.user.createdAt).toBeTruthy();
+    expect(body.user.updatedAt).toBeTruthy();
   });
 });
 

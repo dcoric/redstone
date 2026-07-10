@@ -66,6 +66,25 @@ Login and get JWT token (for mobile).
 }
 ```
 
+### GET /auth/me
+Validate the current session and return the authenticated user. Mobile clients
+use this endpoint to restore a persisted JWT session at startup.
+
+**Response (200):**
+```json
+{
+  "user": {
+    "id": "...",
+    "email": "user@example.com",
+    "name": "John Doe",
+    "createdAt": "2025-12-17T...",
+    "updatedAt": "2025-12-17T..."
+  }
+}
+```
+
+Returns `401` when the cookie or bearer token is missing, invalid, or expired.
+
 ---
 
 ## File Endpoints
