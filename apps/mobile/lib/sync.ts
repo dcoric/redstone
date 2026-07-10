@@ -1,9 +1,17 @@
 import * as Network from 'expo-network';
 import { dbFiles, dbFolders, syncState } from './db';
-import { filesApi, syncApi } from './api-client';
+import { ApiClientError, filesApi, syncApi } from './api-client';
+import type { FileWithRelations } from './types';
 
 const FILE_SYNC_CURSOR = 'files_and_folders_cursor';
 const INITIAL_SYNC_CURSOR = '1970-01-01T00:00:00.000Z';
+
+function getConflictFile(error: unknown): FileWithRelations | null {
+    if (!(error instanceof ApiClientError) || error.status !== 409) return null;
+    if (!error.details || typeof error.details !== 'object') return null;
+    if (!('currentFile' in error.details)) return null;
+    return error.details.currentFile as FileWithRelations;
+}
 
 export type SyncResult =
     | { status: 'offline'; errors: [] }
@@ -23,7 +31,7 @@ export const syncFiles = async (): Promise<SyncResult> => {
         try {
             if (file.deleted_at) {
                 if (file.last_synced) {
-                    await filesApi.delete(file.id);
+                    await filesApi.delete(file.id, file.version_id);
                 }
                 await dbFiles.deletePermanently(file.id);
             } else if (!file.last_synced) {
@@ -42,6 +50,7 @@ export const syncFiles = async (): Promise<SyncResult> => {
                     title: file.title,
                     content: file.content,
                     folderId: file.folder_id,
+                    baseUpdatedAt: file.version_id ?? undefined,
                 });
                 await dbFiles.markSynced(
                     file.id,
@@ -50,6 +59,13 @@ export const syncFiles = async (): Promise<SyncResult> => {
                 );
             }
         } catch (error) {
+            const conflictFile = getConflictFile(error);
+            if (conflictFile) {
+                await dbFiles.recordConflict(file.id, {
+                    kind: 'remote-update',
+                    file: conflictFile,
+                });
+            }
             const message = error instanceof Error ? error.message : String(error);
             errors.push(`Failed to push file ${file.id}: ${message}`);
         }

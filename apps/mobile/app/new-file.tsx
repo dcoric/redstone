@@ -1,8 +1,18 @@
 import { useState } from 'react';
-import { View, TextInput, ActivityIndicator, Alert, TouchableOpacity, Text, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import {
+    ActivityIndicator,
+    Alert,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    Text,
+    TextInput,
+    TouchableOpacity,
+} from 'react-native';
 import { Stack, useRouter } from 'expo-router';
+import * as Crypto from 'expo-crypto';
 import { dbFiles } from '../lib/db';
-import { Save, X } from 'lucide-react-native';
+import { syncFiles } from '../lib/sync';
 
 export default function NewFile() {
     const [title, setTitle] = useState('');
@@ -18,25 +28,23 @@ export default function NewFile() {
 
         setSaving(true);
         try {
-            // Offline-first: save locally
-            const id = Date.now().toString(); // Temporary ID
+            const now = new Date().toISOString();
             await dbFiles.insert({
-                id,
-                title,
+                id: Crypto.randomUUID(),
+                title: title.trim(),
                 content,
                 folder_id: null,
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString(),
+                created_at: now,
+                updated_at: now,
                 deleted_at: null,
                 last_synced: null,
                 dirty: 1,
-                version_id: null
+                version_id: null,
+                conflict_json: null,
             });
-
-            // router.replace(`/file/${id}`); // We'd need to update editor too.
-            // For now just go back.
             router.back();
-        } catch (error) {
+            void syncFiles();
+        } catch {
             Alert.alert('Error', 'Failed to create file');
             setSaving(false);
         }
@@ -53,12 +61,18 @@ export default function NewFile() {
                     presentation: 'modal',
                     headerLeft: () => (
                         <TouchableOpacity onPress={() => router.back()}>
-                            <Text className="text-blue-600 text-base">Cancel</Text>
+                            <Text className="text-base text-blue-600">Cancel</Text>
                         </TouchableOpacity>
                     ),
                     headerRight: () => (
                         <TouchableOpacity onPress={handleCreate} disabled={saving}>
-                            {saving ? <ActivityIndicator size="small" color="#3b82f6" /> : <Text className="text-blue-600 font-bold text-base">Create</Text>}
+                            {saving ? (
+                                <ActivityIndicator size="small" color="#3b82f6" />
+                            ) : (
+                                <Text className="text-base font-bold text-blue-600">
+                                    Create
+                                </Text>
+                            )}
                         </TouchableOpacity>
                     ),
                 }}
@@ -66,14 +80,14 @@ export default function NewFile() {
 
             <ScrollView className="flex-1 p-4">
                 <TextInput
-                    className="text-2xl font-bold text-gray-900 mb-4"
+                    className="mb-4 text-2xl font-bold text-gray-900"
                     placeholder="File Title"
                     value={title}
                     onChangeText={setTitle}
                     autoFocus
                 />
                 <TextInput
-                    className="text-base text-gray-700 leading-6 min-h-[300px]"
+                    className="min-h-[300px] text-base leading-6 text-gray-700"
                     placeholder="Start typing..."
                     value={content}
                     onChangeText={setContent}

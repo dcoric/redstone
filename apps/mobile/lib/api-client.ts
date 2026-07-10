@@ -46,7 +46,8 @@ export interface AuthSession {
 export class ApiClientError extends Error {
     constructor(
         message: string,
-        public readonly status: number
+        public readonly status: number,
+        public readonly details?: unknown
     ) {
         super(message);
         this.name = 'ApiClientError';
@@ -114,13 +115,15 @@ async function apiFetch<T>(
             }
 
             let errorMessage = `HTTP error! status: ${response.status}`;
+            let errorDetails: unknown;
             try {
                 const errorData = await response.json() as ApiError;
                 errorMessage = errorData.error || errorMessage;
+                errorDetails = errorData;
             } catch {
                 // If JSON parsing fails, use the default error message
             }
-            throw new ApiClientError(errorMessage, response.status);
+            throw new ApiClientError(errorMessage, response.status, errorDetails);
         }
 
         const data = await response.json();
@@ -202,7 +205,12 @@ export const filesApi = {
         apiPost<FileResponse>('/files', data),
     update: (id: string, data: UpdateFileRequest) =>
         apiPut<FileResponse>(`/files/${id}`, data),
-    delete: (id: string) => apiDelete<SuccessResponse>(`/files/${id}`),
+    delete: (id: string, baseUpdatedAt?: string | null) => {
+        const query = baseUpdatedAt
+            ? `?baseUpdatedAt=${encodeURIComponent(baseUpdatedAt)}`
+            : '';
+        return apiDelete<SuccessResponse>(`/files/${id}${query}`);
+    },
     getVersions: (id: string) => apiGet<FileVersionsResponse>(`/files/${id}/versions`),
 };
 

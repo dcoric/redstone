@@ -189,7 +189,8 @@ Update a file. Creates a version if content changes.
 {
   "title": "Updated Title", // optional
   "content": "Updated content", // optional
-  "folderId": "..." // optional (null to move to root)
+  "folderId": "...", // optional (null to move to root)
+  "baseUpdatedAt": "2025-12-17T16:00:00.000Z" // optional optimistic lock
 }
 ```
 
@@ -200,8 +201,15 @@ Update a file. Creates a version if content changes.
 }
 ```
 
+When `baseUpdatedAt` does not match the current server revision, the endpoint
+returns `409` with `currentFile` so an offline client can ask the user which
+version to keep.
+
 ### DELETE /files/:id
 Soft delete a file.
+
+Mobile clients may supply `baseUpdatedAt` as a query parameter. A stale value
+returns the same `409` conflict response as an update.
 
 **Response (200):**
 ```json

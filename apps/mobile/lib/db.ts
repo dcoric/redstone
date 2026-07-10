@@ -12,7 +12,12 @@ export interface LocalFile {
     last_synced: string | null;
     dirty: number;
     version_id: string | null;
+    conflict_json: string | null;
 }
+
+export type FileConflict =
+    | { kind: 'remote-update'; file: FileWithRelations }
+    | { kind: 'remote-delete' };
 
 export interface LocalFolder {
     id: string;
@@ -49,7 +54,8 @@ export const initDb = async () => {
           deleted_at TEXT,
           last_synced TEXT,
           dirty INTEGER NOT NULL DEFAULT 0,
-          version_id TEXT
+          version_id TEXT,
+          conflict_json TEXT
         );
 
         CREATE TABLE IF NOT EXISTS folders (
@@ -68,14 +74,23 @@ export const initDb = async () => {
           value TEXT
         );
     `);
+
+    const fileColumns = await database.getAllAsync<{ name: string }>(
+        'PRAGMA table_info(files)'
+    );
+    if (!fileColumns.some((column) => column.name === 'conflict_json')) {
+        await database.execAsync(
+            'ALTER TABLE files ADD COLUMN conflict_json TEXT'
+        );
+    }
 };
 
 async function writeFile(file: LocalFile) {
     const database = await getDb();
     await database.runAsync(
         `INSERT OR REPLACE INTO files
-         (id, title, content, folder_id, created_at, updated_at, deleted_at, last_synced, dirty, version_id)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         (id, title, content, folder_id, created_at, updated_at, deleted_at, last_synced, dirty, version_id, conflict_json)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
             file.id,
             file.title,
@@ -87,6 +102,7 @@ async function writeFile(file: LocalFile) {
             file.last_synced,
             file.dirty,
             file.version_id,
+            file.conflict_json,
         ]
     );
 }
@@ -103,6 +119,7 @@ function remoteToLocalFile(file: FileWithRelations, syncedAt: string): LocalFile
         last_synced: syncedAt,
         dirty: 0,
         version_id: file.updatedAt,
+        conflict_json: null,
     };
 }
 
@@ -156,7 +173,16 @@ export const dbFiles = {
 
     upsertRemote: async (file: FileWithRelations, syncedAt: string) => {
         const current = await dbFiles.getById(file.id);
-        if (current?.dirty) return false;
+        if (current?.dirty) {
+            await writeFile({
+                ...current,
+                conflict_json: JSON.stringify({
+                    kind: 'remote-update',
+                    file,
+                } satisfies FileConflict),
+            });
+            return true;
+        }
         await writeFile(remoteToLocalFile(file, syncedAt));
         return true;
     },
@@ -175,7 +201,15 @@ export const dbFiles = {
 
     applyRemoteDelete: async (id: string) => {
         const current = await dbFiles.getById(id);
-        if (current?.dirty) return false;
+        if (current?.dirty) {
+            await writeFile({
+                ...current,
+                conflict_json: JSON.stringify({
+                    kind: 'remote-delete',
+                } satisfies FileConflict),
+            });
+            return true;
+        }
         const database = await getDb();
         await database.runAsync('DELETE FROM files WHERE id = ?', [id]);
         return true;
@@ -184,6 +218,52 @@ export const dbFiles = {
     deletePermanently: async (id: string) => {
         const database = await getDb();
         await database.runAsync('DELETE FROM files WHERE id = ?', [id]);
+    },
+
+    recordConflict: async (id: string, conflict: FileConflict) => {
+        const current = await dbFiles.getById(id);
+        if (!current) return;
+        await writeFile({
+            ...current,
+            conflict_json: JSON.stringify(conflict),
+        });
+    },
+
+    getConflict: async (id: string): Promise<FileConflict | null> => {
+        const current = await dbFiles.getById(id);
+        if (!current?.conflict_json) return null;
+        return JSON.parse(current.conflict_json) as FileConflict;
+    },
+
+    resolveConflict: async (id: string, resolution: 'local' | 'remote') => {
+        const current = await dbFiles.getById(id);
+        const conflict = await dbFiles.getConflict(id);
+        if (!current || !conflict) return;
+
+        if (resolution === 'local') {
+            await writeFile({
+                ...current,
+                last_synced:
+                    conflict.kind === 'remote-delete'
+                        ? null
+                        : current.last_synced,
+                version_id:
+                    conflict.kind === 'remote-update'
+                        ? conflict.file.updatedAt
+                        : null,
+                conflict_json: null,
+                dirty: 1,
+            });
+            return;
+        }
+
+        if (conflict.kind === 'remote-delete') {
+            await dbFiles.deletePermanently(id);
+        } else {
+            await writeFile(
+                remoteToLocalFile(conflict.file, new Date().toISOString())
+            );
+        }
     },
 };
 

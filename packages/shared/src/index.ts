@@ -154,6 +154,7 @@ export interface UpdateFileRequest {
   title?: string;
   content?: string;
   folderId?: string | null;
+  baseUpdatedAt?: string;
 }
 
 export interface CreateFolderRequest {

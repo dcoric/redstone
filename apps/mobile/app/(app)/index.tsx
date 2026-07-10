@@ -7,7 +7,15 @@ import { useFocusEffect } from 'expo-router';
 import { useCallback } from 'react';
 
 export default function FileList() {
-    const { files, loading, refreshing, refresh, reload } = useFiles();
+    const {
+        files,
+        loading,
+        refreshing,
+        refresh,
+        reload,
+        syncStatus,
+        syncErrors,
+    } = useFiles();
     const router = useRouter();
 
     useFocusEffect(
@@ -28,7 +36,7 @@ export default function FileList() {
         <View className="flex-1 bg-gray-50">
             <Stack.Screen
                 options={{
-                    title: 'My Files (Offline)',
+                    title: 'My Files',
                     headerRight: () => (
                         <TouchableOpacity onPress={() => router.push('/new-file')}>
                             <Plus color="#3b82f6" size={24} />
@@ -37,21 +45,20 @@ export default function FileList() {
                 }}
             />
 
+            {syncStatus === 'offline' || syncStatus === 'partial' ? (
+                <View className={`px-4 py-2 ${syncStatus === 'offline' ? 'bg-gray-200' : 'bg-amber-100'}`}>
+                    <Text className={`text-xs ${syncStatus === 'offline' ? 'text-gray-700' : 'text-amber-800'}`}>
+                        {syncStatus === 'offline'
+                            ? 'Offline — changes will sync when your connection returns.'
+                            : syncErrors[0] ?? 'Some changes need attention.'}
+                    </Text>
+                </View>
+            ) : null}
+
             <FlatList
                 data={files}
                 keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                    <FileCard file={{
-                        ...item,
-                        userId: '', // mock
-                        createdAt: item.created_at,
-                        updatedAt: item.updated_at,
-                        deletedAt: item.deleted_at,
-                        lastSynced: item.last_synced || '',
-                        folder: undefined, // TODO: fetch folder name
-                        folderId: item.folder_id
-                    }} />
-                )}
+                renderItem={({ item }) => <FileCard file={item} />}
                 contentContainerStyle={{ padding: 16 }}
                 refreshControl={
                     <RefreshControl refreshing={refreshing} onRefresh={refresh} />

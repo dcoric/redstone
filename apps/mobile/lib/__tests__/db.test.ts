@@ -8,6 +8,9 @@ const fakeDatabase = vi.hoisted(() => {
         files,
         execAsync: vi.fn(async () => undefined),
         getAllAsync: vi.fn(async (query: string) => {
+            if (query.includes('PRAGMA table_info')) {
+                return [{ name: 'conflict_json' }];
+            }
             const rows = [...files.values()];
             return query.includes('dirty = 1')
                 ? rows.filter((row) => row.dirty === 1)
@@ -32,6 +35,7 @@ const fakeDatabase = vi.hoisted(() => {
                     lastSynced,
                     dirty,
                     versionId,
+                    conflictJson,
                 ] = params;
                 files.set(String(id), {
                     id,
@@ -44,6 +48,7 @@ const fakeDatabase = vi.hoisted(() => {
                     last_synced: lastSynced,
                     dirty,
                     version_id: versionId,
+                    conflict_json: conflictJson,
                 });
             } else if (query.includes('DELETE FROM files')) {
                 files.delete(String(params[0]));
@@ -69,6 +74,7 @@ const localFile = (overrides: Partial<LocalFile> = {}): LocalFile => ({
     last_synced: null,
     dirty: 0,
     version_id: null,
+    conflict_json: null,
     ...overrides,
 });
 
@@ -117,10 +123,14 @@ describe('mobile file repository', () => {
             '2026-01-02T00:01:00.000Z'
         );
 
-        expect(applied).toBe(false);
+        expect(applied).toBe(true);
         expect(await dbFiles.getById('local-file')).toMatchObject({
             title: 'Edited offline',
             dirty: 1,
+        });
+        await expect(dbFiles.getConflict('local-file')).resolves.toMatchObject({
+            kind: 'remote-update',
+            file: { title: 'Server title' },
         });
     });
 
@@ -138,6 +148,33 @@ describe('mobile file repository', () => {
             title: 'Server title',
             dirty: 0,
             last_synced: '2026-01-02T00:01:00.000Z',
+        });
+    });
+
+    it('rebases an explicitly chosen local version onto the remote revision', async () => {
+        await dbFiles.insert(localFile({ title: 'Edited offline', dirty: 1 }));
+        await dbFiles.upsertRemote(remoteFile(), '2026-01-02T00:01:00.000Z');
+
+        await dbFiles.resolveConflict('local-file', 'local');
+
+        expect(await dbFiles.getById('local-file')).toMatchObject({
+            title: 'Edited offline',
+            version_id: '2026-01-02T00:00:00.000Z',
+            conflict_json: null,
+            dirty: 1,
+        });
+    });
+
+    it('can replace a local edit with the remote conflict version', async () => {
+        await dbFiles.insert(localFile({ title: 'Edited offline', dirty: 1 }));
+        await dbFiles.upsertRemote(remoteFile(), '2026-01-02T00:01:00.000Z');
+
+        await dbFiles.resolveConflict('local-file', 'remote');
+
+        expect(await dbFiles.getById('local-file')).toMatchObject({
+            title: 'Server title',
+            conflict_json: null,
+            dirty: 0,
         });
     });
 });
