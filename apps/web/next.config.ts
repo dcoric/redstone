@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import path from "node:path";
 
 const nextConfig: NextConfig = {
   transpilePackages: [
@@ -7,6 +8,9 @@ const nextConfig: NextConfig = {
     '@redstone/markdown',
   ],
   serverExternalPackages: ['@redstone/database'],
+  turbopack: {
+    root: path.join(__dirname, '../..'),
+  },
 };
 
 export default nextConfig;

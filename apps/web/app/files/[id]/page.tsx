@@ -30,14 +30,16 @@ export default function FilePage() {
     const [isSaving, setIsSaving] = React.useState(false)
     const [hasChanges, setHasChanges] = React.useState(false)
     const [tagInput, setTagInput] = React.useState("")
-    const [isAddingTag, setIsAddingTag] = React.useState(false)
     const [isRemovingTag, setIsRemovingTag] = React.useState<string | null>(null)
     const [showTagInput, setShowTagInput] = React.useState(false)
     const [backlinks, setBacklinks] = React.useState<Backlink[]>([])
     const [showBacklinks, setShowBacklinks] = React.useState(false)
     const [vimMode, setVimMode] = React.useState(false)
 
-    const currentTags = file?.tags?.map(ft => ft.tag) || []
+    const currentTags = React.useMemo(
+        () => file?.tags?.map((fileTag) => fileTag.tag) ?? [],
+        [file?.tags]
+    )
 
     React.useEffect(() => {
         if (file) {
@@ -65,7 +67,7 @@ export default function FilePage() {
 
     const brokenLinks = React.useMemo(() => {
         if (!allFiles.length) return []
-        const fileTitles = allFiles.map((f: any) => f.title)
+        const fileTitles = allFiles.map((file) => file.title)
         const allTitles = [...fileTitles, title]
         return validateWikiLinks(content, allTitles.map((t: string) => ({ id: "", title: t })))
             .filter((link) => !link.valid)
@@ -102,7 +104,7 @@ export default function FilePage() {
     }, [id, file, title, content, mutate])
 
     const handleWikiLinkClick = React.useCallback((linkTitle: string) => {
-        const found = allFiles.find((f: any) => f.title.toLowerCase() === linkTitle.toLowerCase())
+        const found = allFiles.find((file) => file.title.toLowerCase() === linkTitle.toLowerCase())
         if (found) {
             router.push(`/files/${found.id}`)
         } else {
@@ -117,7 +119,6 @@ export default function FilePage() {
     const handleAddTag = React.useCallback(async (tagName: string) => {
         if (!id || !tagName.trim()) return
 
-        setIsAddingTag(true)
         try {
             await tagsApi.addToFile(id, tagName.trim())
             await mutate()
@@ -127,8 +128,6 @@ export default function FilePage() {
         } catch (error) {
             console.error("Failed to add tag:", error)
             alert("Failed to add tag. Please try again.")
-        } finally {
-            setIsAddingTag(false)
         }
     }, [id, mutate, mutateTags])
 
@@ -168,7 +167,7 @@ export default function FilePage() {
     }
 
     const autocompleteFiles = React.useMemo(() => {
-        return allFiles.map((f: any) => ({ id: f.id, title: f.title }))
+        return allFiles.map((file) => ({ id: file.id, title: file.title }))
     }, [allFiles])
 
     if (isLoading) {

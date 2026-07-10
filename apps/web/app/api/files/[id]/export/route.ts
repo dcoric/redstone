@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@redstone/database';
+import { prisma, Prisma } from '@redstone/database';
 import { getUserId } from '@/lib/api-middleware';
 
 interface RouteParams {
@@ -57,9 +57,16 @@ export async function GET(
   }
 }
 
-function generateHtmlExport(file: any): string {
+type ExportFile = Prisma.FileGetPayload<{
+  include: {
+    folder: { select: { id: true; name: true } };
+    tags: { include: { tag: true } };
+  };
+}>;
+
+function generateHtmlExport(file: ExportFile): string {
   const tagsHtml = file.tags
-    .map((ft: any) => `<span class="tag">${ft.tag.name}</span>`)
+    .map((ft) => `<span class="tag">${ft.tag.name}</span>`)
     .join(' ');
 
   return `<!DOCTYPE html>

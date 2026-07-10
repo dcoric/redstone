@@ -5,7 +5,7 @@ import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { RedstoneLogo } from '@/components/brand/redstone-logo';
-import { Loader2 } from 'lucide-react';
+import { ArrowRight, Loader2, LockKeyhole, Mail } from 'lucide-react';
 
 export default function SignInPage() {
   const router = useRouter();
@@ -81,9 +81,7 @@ export default function SignInPage() {
                 Email Address
               </span>
               <div className="relative">
-                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-lg text-muted-foreground">
-                  mail
-                </span>
+                <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <input
                   id="email"
                   type="email"
@@ -102,9 +100,7 @@ export default function SignInPage() {
                 Password
               </span>
               <div className="relative">
-                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-lg text-muted-foreground">
-                  lock
-                </span>
+                <LockKeyhole className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <input
                   id="password"
                   type="password"
@@ -132,9 +128,7 @@ export default function SignInPage() {
             ) : (
               <>
                 Sign in
-                <span className="material-symbols-outlined text-lg">
-                  arrow_forward
-                </span>
+                <ArrowRight className="h-4 w-4" />
               </>
             )}
           </button>

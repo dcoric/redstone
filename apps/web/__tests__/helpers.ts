@@ -19,6 +19,7 @@ export function apiRequest(
 
   return new NextRequest(`${BASE_URL}${path}`, {
     ...rest,
+    signal: rest.signal ?? undefined,
     headers: mergedHeaders,
   });
 }

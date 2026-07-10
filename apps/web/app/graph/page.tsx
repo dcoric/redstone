@@ -63,7 +63,7 @@ export default function GraphPage() {
   }, [graphData.edges, filteredNodes])
 
   const handleNodeClick = (node: GraphNode) => {
-    const file = files.find((f: any) => f.title.toLowerCase() === node.label.toLowerCase())
+    const file = files.find((file) => file.title.toLowerCase() === node.label.toLowerCase())
     if (file) {
       router.push(`/files/${file.id}`)
     }
@@ -115,7 +115,7 @@ export default function GraphPage() {
                 onChange={(e) => setFilterTag(e.target.value || null)}
               >
                 <option value="">All tags</option>
-                {tags.map((tag: any) => (
+                {tags.map((tag) => (
                   <option key={tag.id} value={tag.name}>
                     {tag.name}
                   </option>
@@ -133,7 +133,7 @@ export default function GraphPage() {
                 onChange={(e) => setFilterFolder(e.target.value || null)}
               >
                 <option value="">All folders</option>
-                {folders.map((folder: any) => (
+                {folders.map((folder) => (
                   <option key={folder.id} value={folder.id}>
                     {folder.name}
                   </option>
@@ -165,7 +165,7 @@ export default function GraphPage() {
           nodeRelSize={3}
           linkColor={() => "#e2e8f0"}
           linkWidth={1}
-          onNodeClick={(node: any) => handleNodeClick(node as GraphNode)}
+          onNodeClick={(node) => handleNodeClick(node as unknown as GraphNode)}
           backgroundColor="#0f172a"
         />
         <div className="absolute bottom-4 left-4 bg-background/80 backdrop-blur-sm rounded-lg p-3 text-xs text-muted-foreground">

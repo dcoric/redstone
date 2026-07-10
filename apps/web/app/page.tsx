@@ -5,7 +5,7 @@ import { FileList } from "@/components/features/file-browser/file-list"
 import { Sidebar } from "@/components/features/file-browser/sidebar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Search, Plus, User, LogOut, Loader2, X, Wifi, WifiOff, Network, Upload } from "lucide-react"
+import { Search, Plus, User, LogOut, Loader2, X, Network, Upload } from "lucide-react"
 import { useAuth } from "@/lib/hooks/use-auth"
 import { useSSE } from "@/lib/hooks/use-sse"
 import {
@@ -86,8 +86,11 @@ export default function Home() {
         await mutate()
         const data = await res.json()
         router.push(`/files/${data.file.id}`)
-      } catch (error: any) {
-        alert(error.message || 'Import failed. Please try again.')
+      } catch (error) {
+        const message = error instanceof Error
+          ? error.message
+          : 'Import failed. Please try again.'
+        alert(message)
       }
     }
     input.click()
@@ -297,7 +300,7 @@ export default function Home() {
             <div className="space-y-4">
               <div className="flex items-center justify-between text-sm text-muted-foreground">
                 <span>
-                  {searchResults.length} result{searchResults.length === 1 ? "" : "s"} for "{searchQuery.trim()}"
+                  {searchResults.length} result{searchResults.length === 1 ? "" : "s"} for &quot;{searchQuery.trim()}&quot;
                 </span>
                 {searchError ? <span className="text-destructive">{searchError}</span> : null}
               </div>

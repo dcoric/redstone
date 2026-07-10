@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { MoreVertical, Loader2, Check } from "lucide-react"
+import { MoreVertical, Loader2, Check, FileText, Folder } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
@@ -87,7 +87,7 @@ export function FileList({ className, folderId, ...props }: FileListProps) {
     if (files.length === 0) {
         return (
             <div className={cn("flex flex-col items-center justify-center p-12 text-center", className)} {...props}>
-                <span className="material-symbols-outlined mb-4 text-4xl text-muted-foreground">description</span>
+                <FileText className="mb-4 h-10 w-10 text-muted-foreground" />
                 <p className="text-sm font-medium">No files in this folder</p>
                 <p className="mt-1 text-xs text-muted-foreground">Create a note or import markdown to get started</p>
             </div>
@@ -170,7 +170,7 @@ function FileCard({
             aria-label={`Open ${file.title}`}
         >
             <div className="mb-4 flex items-start justify-between">
-                <span className="material-symbols-outlined text-3xl text-primary">description</span>
+                <FileText className="h-8 w-8 text-primary" />
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
                         <Button variant="ghost" className="h-8 w-8 p-0 text-muted-foreground hover:text-primary">
@@ -256,7 +256,7 @@ function FileCard({
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                     {file.folder?.name && (
                         <span className="flex items-center gap-1">
-                            <span className="material-symbols-outlined text-sm">folder</span>
+                            <Folder className="h-3.5 w-3.5" />
                             {file.folder.name}
                         </span>
                     )}

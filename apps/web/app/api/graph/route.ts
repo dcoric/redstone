@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@redstone/database';
+import { prisma, Prisma } from '@redstone/database';
 import { getUserId } from '@/lib/api-middleware';
 import { extractWikiLinks } from '@/lib/wiki-links';
 
@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     const tagFilter = searchParams.get('tag');
     const folderFilter = searchParams.get('folder');
 
-    const where: any = { userId, deletedAt: null };
+    const where: Prisma.FileWhereInput = { userId, deletedAt: null };
 
     if (tagFilter) {
       where.tags = { some: { tag: { name: tagFilter } } };
