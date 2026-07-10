@@ -24,6 +24,7 @@ import type {
     UpdateFolderRequest,
     FilesListParams,
     ApiError,
+    SyncResponse,
 } from './types';
 
 // Detect if running on emulator/device for localhost
@@ -215,4 +216,9 @@ export const tagsApi = {
 export const searchApi = {
     search: (query: string) =>
         apiGet<SearchResponse>(`/search?q=${encodeURIComponent(query)}`),
+};
+
+export const syncApi = {
+    pull: (since: string) =>
+        apiGet<SyncResponse>(`/sync?since=${encodeURIComponent(since)}`),
 };

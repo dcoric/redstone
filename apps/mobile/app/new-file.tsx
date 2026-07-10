@@ -30,7 +30,7 @@ export default function NewFile() {
                 deleted_at: null,
                 last_synced: null,
                 dirty: 1,
-                versionId: null
+                version_id: null
             });
 
             // router.replace(`/file/${id}`); // We'd need to update editor too.
