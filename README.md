@@ -26,7 +26,7 @@ Requires [Playwright](https://playwright.dev/) Chromium (`npx playwright install
 
 - **Monorepo**: pnpm workspaces + Turborepo
 - **Web**: Next.js 16 (App Router), React, TypeScript, Tailwind CSS, shadcn/ui
-- **Mobile**: Expo React Native (deferred — see [PLAN.md](PLAN.md))
+- **Mobile**: Expo React Native with offline SQLite and incremental sync
 - **Database**: PostgreSQL 15+ with Prisma ORM
 - **Authentication**: NextAuth.js (web) + JWT (mobile API)
 - **CI**: GitHub Actions (lint, build, migrate, API tests)
@@ -118,7 +118,7 @@ After seeding:
 # Run apps
 pnpm dev              # All apps (turbo)
 pnpm dev:web          # Next.js web app only
-pnpm dev:mobile       # Expo (when Phase 5 starts)
+pnpm dev:mobile       # Expo mobile app
 
 # Database
 pnpm --filter @redstone/database db:generate
@@ -130,6 +130,7 @@ pnpm --filter @redstone/database db:studio
 pnpm build            # Build all packages
 pnpm test             # Run tests (includes API route tests in apps/web)
 pnpm lint             # ESLint across the monorepo
+pnpm --filter mobile exec tsc --noEmit
 ```
 
 ## Features
@@ -153,10 +154,18 @@ pnpm lint             # ESLint across the monorepo
 - Tag management on the file editor
 - Search with highlighting
 
+### Mobile
+
+- Persistent JWT authentication using SecureStore
+- Offline-first file creation, editing, deletion, and markdown preview
+- Incremental SQLite sync with explicit conflict resolution
+- Folder navigation and file moves
+- Local title/content search
+- Offline tag add/remove and tag filtering
+
 ### In progress / planned
 
-- **Pre-mobile hardening** — broader test coverage, Next.js/Turbopack config cleanup
-- **Mobile app** (Phase 5) — Expo, offline sync
+- **Mobile release candidate** — implementation complete; physical-device QA pending
 - **Desktop app** (Phase 7) — Electron
 
 See [PLAN.md](PLAN.md) for the full roadmap and [COMPLETED.md](COMPLETED.md) for shipped work.
@@ -195,8 +204,8 @@ Schema: [packages/database/prisma/schema.prisma](packages/database/prisma/schema
 | 3–4 — Web UI & API integration | ✅ Complete |
 | 4.5 — Verification | ✅ Complete |
 | 6 — Advanced web features | ✅ Complete |
-| Pre-mobile hardening | 🔄 In progress |
-| 5 — Mobile | ⏳ Deferred |
+| Pre-mobile hardening | ✅ Complete |
+| 5 — Mobile | 🧪 Release candidate |
 | 7 — Desktop | ⏳ Planned |
 
 ## License

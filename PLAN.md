@@ -30,7 +30,7 @@ We use Next.js for both frontend and backend (API routes) to simplify deployment
 
 ## Current Status
 
-**✅ Phase 6 Complete** — Advanced web features shipped. **🔄 Pre-Mobile Hardening** — CI, tests, and stability before Phase 5.
+**✅ Phase 6 Complete** — Advanced web features shipped. **🧪 Phase 5 release candidate** — mobile implementation complete; physical-device QA remains.
 
 ### What's Working
 - ✅ Full-stack authentication (NextAuth web + JWT for API/mobile clients)
@@ -47,8 +47,8 @@ We use Next.js for both frontend and backend (API routes) to simplify deployment
 - ✅ GitHub Actions CI (build, lint, migrate, API tests)
 
 ### What's Next (priority order)
-- [ ] **Pre-Mobile Hardening** (current) — expand test coverage, fix Next.js warnings, keep CI green
-- [ ] **Phase 5 — Mobile app** (deferred until hardening is done)
+- [x] **Pre-Mobile Hardening** — expanded coverage, zero lint warnings, Next.js 16 cleanup
+- [ ] **Phase 5 — Mobile app** — implementation complete; physical iOS/Android QA pending
 - [ ] **Phase 7 — Desktop app** (Electron)
 
 ---
@@ -69,7 +69,7 @@ We use Next.js for both frontend and backend (API routes) to simplify deployment
 redstone/
 ├── apps/
 │   ├── web/                 # Next.js app (frontend + API)
-│   └── mobile/              # Expo app (scaffold — Phase 5, deferred)
+│   └── mobile/              # Expo offline-first mobile app
 ├── packages/
 │   ├── shared/              # Shared types and utilities
 │   ├── database/            # Prisma schema and client
@@ -183,7 +183,7 @@ Goal: confirm all web and API behaviors are stable before starting mobile.
 
 ---
 
-### Pre-Mobile Hardening (current)
+### Pre-Mobile Hardening ✅ (Complete)
 
 **Priority: High** | **Effort: Medium** | **Goal: stable web/API before Expo work**
 
@@ -193,40 +193,40 @@ Goal: confirm all web and API behaviors are stable before starting mobile.
 - [x] API integration tests (auth, files CRUD, folders, search) via Vitest
 
 #### Remaining
-- [ ] Expand API tests (tags, graph, attachments, SSE smoke)
-- [ ] Resolve 34 ESLint warnings in `apps/web` (re-enable `no-explicit-any` as error when clean)
-- [ ] Resolve Next.js 16 warnings (`turbopack.root`, middleware → proxy migration)
-- [ ] Keep `PLAN.md` / `API.md` aligned with implemented endpoints
+- [x] Expand API tests (tags, graph, attachments, SSE smoke)
+- [x] Resolve ESLint warnings in `apps/web` and enforce `no-explicit-any`
+- [x] Resolve Next.js 16 warnings (`turbopack.root`, middleware → proxy migration)
+- [x] Keep `PLAN.md` / `API.md` aligned with implemented endpoints
 - [ ] Optional: E2E smoke (Playwright) for auth + editor save path
 
 ---
 
 ### Phase 5 - Mobile App
 
-**Status: Deferred** — start only after Pre-Mobile Hardening checklist is complete.
+**Status: Release candidate** — implementation complete; physical-device QA pending.
 
 **Priority: Medium** | **Effort: High** | **Time: 1-2 weeks**
 
-> Expo scaffold exists (`apps/mobile`) with offline SQLite; not in active development until web/API hardening is done.
+> iOS and Android production bundles pass. See `MOBILE_RELEASE_CHECKLIST.md` for the remaining device checks.
 
 #### Tasks
-- [ ] Set up Expo project with TypeScript
-- [ ] Configure navigation (Expo Router)
-- [ ] Create authentication flow
+- [x] Set up Expo project with TypeScript
+- [x] Configure navigation (Expo Router)
+- [x] Create authentication flow
   - Login/signup screens
   - JWT token storage (SecureStore)
   - Auth context/hooks
-- [ ] Implement file management
+- [x] Implement file management
   - File list screen
   - File editor with markdown support
   - Create/edit/delete operations
-- [ ] Add offline support
+- [x] Add offline support
   - Local database (SQLite)
   - Sync mechanism with `/api/sync`
   - Conflict resolution
-- [ ] Folder navigation
-- [ ] Search functionality
-- [ ] Tag support
+- [x] Folder navigation and file moves
+- [x] Local search functionality
+- [x] Offline tag support and filtering
 
 #### Key Decisions
 - **Markdown Editor**: react-native-markdown-editor or custom TextInput
@@ -365,5 +365,5 @@ CI runs the same steps on every push/PR to `main` (see `.github/workflows/ci.yml
 ---
 
 **Last Updated:** 2026-05-18
-**Current Phase:** Pre-Mobile Hardening
-**Next Milestone:** Expand test coverage and stabilize CI, then Phase 5 (Mobile App)
+**Current Phase:** Phase 5 release-candidate validation
+**Next Milestone:** Physical iOS/Android QA, then Phase 7 (Desktop App)
