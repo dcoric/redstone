@@ -1,0 +1,13 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "preserve",
+    "types": ["node", "@electron-forge/plugin-vite/forge-vite-env"],
+    "noEmit": true
+  },
+  "include": ["src/**/*.ts", "*.ts", "forge.env.d.ts"]
+}

@@ -1,0 +1,17 @@
+:root { color: #e2e8f0; background: #0b1326; font-family: Inter, system-ui, sans-serif; }
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 320px; min-height: 100vh; }
+button, input { font: inherit; }
+.login-shell { min-height: 100vh; display: grid; place-items: center; background: radial-gradient(circle, #1e293b, #0b1326 65%); }
+.login-card { width: min(390px, calc(100vw - 32px)); display: grid; gap: 16px; padding: 32px; border: 1px solid #334155; border-radius: 16px; background: #111c33; box-shadow: 0 24px 60px #0008; }
+.brand-mark { width: 56px; height: 56px; display: grid; place-items: center; border-radius: 14px; background: #ea580c; color: white; font-size: 28px; font-weight: 800; }
+h1, p { margin: 0; }
+.login-card p, .vault-shell span { color: #94a3b8; }
+label { display: grid; gap: 6px; color: #cbd5e1; font-size: 14px; }
+input { width: 100%; border: 1px solid #334155; border-radius: 8px; padding: 11px 12px; color: white; background: #0f172a; }
+button { border: 0; border-radius: 8px; padding: 11px 16px; color: white; background: #ea580c; cursor: pointer; }
+.error { min-height: 20px; color: #fca5a5; font-size: 14px; }
+.vault-shell header { display: flex; justify-content: space-between; align-items: center; padding: 18px 24px; border-bottom: 1px solid #26344f; background: #111c33; }
+.vault-shell header div { display: grid; gap: 2px; }
+.welcome { margin: 32px; padding: 32px; border: 1px solid #26344f; border-radius: 16px; background: #111c33; }
+.welcome p { margin-top: 10px; color: #94a3b8; }
