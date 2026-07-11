@@ -255,24 +255,24 @@ Goal: confirm all web and API behaviors are stable before starting mobile.
 
 ---
 
-### Phase 7 - Desktop App (Electron)
+### Phase 7 - Desktop App (Electron) 🧪
 
-**Priority: Low** | **Effort: Medium** | **Time: 1-2 weeks**
+**Status: Release candidate** — macOS package verified locally; the cross-platform workflow awaits a version tag.
 
 #### Tasks
-- [ ] Set up Electron app with TypeScript
-- [ ] Reuse web UI via a desktop shell
-- [ ] Desktop auth flow (JWT + secure storage)
-- [ ] File management (list, edit, create, delete)
-- [ ] Offline-first storage (SQLite)
-- [ ] Sync with `/api/sync`
-- [ ] Desktop packaging (macOS, Windows, Linux)
-- [ ] CI release pipeline (build + upload artifacts to GitHub Releases)
+- [x] Set up Electron app with TypeScript
+- [x] Build a local vault UI in a hardened Electron shell
+- [x] Desktop auth flow (JWT + OS-backed encrypted storage)
+- [x] File management (list, search, edit, create, delete)
+- [x] Offline-first storage (Node SQLite)
+- [x] Incremental sync with `/api/sync` and explicit conflicts
+- [x] Desktop packaging configuration (macOS, Windows, Linux)
+- [x] Tag-triggered CI release pipeline and GitHub Release artifacts
 
 #### Key Decisions
 - **Framework**: Electron Forge
 - **CI**: GitHub Actions release workflow
-- **Publishing**: `@electron-forge/publisher-github`
+- **Publishing**: GitHub Actions and `gh release`
 - **Packaging**: Forge makers (Squirrel/Zip/Deb/Rpm)
 - **Local Storage**: SQLite + encrypted store for tokens
 - **Updates**: Auto-update strategy (optional)
@@ -365,5 +365,5 @@ CI runs the same steps on every push/PR to `main` (see `.github/workflows/ci.yml
 ---
 
 **Last Updated:** 2026-05-18
-**Current Phase:** Phase 5 release-candidate validation
-**Next Milestone:** Physical iOS/Android QA, then Phase 7 (Desktop App)
+**Current Phase:** Mobile and desktop release-candidate validation
+**Next Milestone:** Physical mobile QA and a tagged cross-platform desktop release

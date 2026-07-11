@@ -27,6 +27,7 @@ Requires [Playwright](https://playwright.dev/) Chromium (`npx playwright install
 - **Monorepo**: pnpm workspaces + Turborepo
 - **Web**: Next.js 16 (App Router), React, TypeScript, Tailwind CSS, shadcn/ui
 - **Mobile**: Expo React Native with offline SQLite and incremental sync
+- **Desktop**: Electron 43 with Node SQLite, encrypted auth, and Forge packaging
 - **Database**: PostgreSQL 15+ with Prisma ORM
 - **Authentication**: NextAuth.js (web) + JWT (mobile API)
 - **CI**: GitHub Actions (lint, build, migrate, API tests)
@@ -37,7 +38,8 @@ Requires [Playwright](https://playwright.dev/) Chromium (`npx playwright install
 redstone/
 ├── apps/
 │   ├── web/              # Next.js web application
-│   └── mobile/           # Expo mobile app (planned)
+│   ├── mobile/           # Expo offline-first mobile app
+│   └── desktop/          # Electron offline-first desktop app
 ├── packages/
 │   ├── shared/           # Shared TypeScript types and utilities
 │   ├── database/         # Prisma schema and client
@@ -119,6 +121,8 @@ After seeding:
 pnpm dev              # All apps (turbo)
 pnpm dev:web          # Next.js web app only
 pnpm dev:mobile       # Expo mobile app
+pnpm dev:desktop      # Electron desktop app
+pnpm make:desktop     # Build installer for the current platform
 
 # Database
 pnpm --filter @redstone/database db:generate
@@ -163,10 +167,19 @@ pnpm --filter mobile exec tsc --noEmit
 - Local title/content search
 - Offline tag add/remove and tag filtering
 
+### Desktop
+
+- Hardened Electron renderer with context isolation, sandboxing, and validated IPC
+- JWT sessions encrypted with the operating system credential backend
+- Persistent local SQLite vault with search and file CRUD
+- Incremental synchronization and explicit conflict resolution
+- Forge makers for macOS, Windows, and Linux
+- Tag-triggered GitHub Release workflow
+
 ### In progress / planned
 
 - **Mobile release candidate** — implementation complete; physical-device QA pending
-- **Desktop app** (Phase 7) — Electron
+- **Desktop release candidate** — local macOS package passes; tagged matrix release pending
 
 See [PLAN.md](PLAN.md) for the full roadmap and [COMPLETED.md](COMPLETED.md) for shipped work.
 
@@ -206,7 +219,7 @@ Schema: [packages/database/prisma/schema.prisma](packages/database/prisma/schema
 | 6 — Advanced web features | ✅ Complete |
 | Pre-mobile hardening | ✅ Complete |
 | 5 — Mobile | 🧪 Release candidate |
-| 7 — Desktop | ⏳ Planned |
+| 7 — Desktop | 🧪 Release candidate |
 
 ## License
 

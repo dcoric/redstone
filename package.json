@@ -6,6 +6,7 @@
     "dev:web": "turbo run dev --filter=web",
     "dev:mobile": "turbo run dev --filter=mobile",
     "dev:desktop": "pnpm --filter desktop start",
+    "make:desktop": "pnpm --filter desktop make",
     "build": "turbo run build",
     "test": "turbo run test",
     "lint": "turbo run lint",

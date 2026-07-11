@@ -12,6 +12,11 @@ const config: ForgeConfig = {
     asar: true,
     name: 'Redstone',
     executableName: 'redstone',
+    icon: process.platform === 'darwin'
+      ? 'assets/icon.icns'
+      : process.platform === 'linux'
+        ? 'assets/icon.png'
+        : undefined,
   },
   rebuildConfig: {},
   makers: [
