@@ -3,13 +3,44 @@ import type { FileWithRelations } from '../types';
 
 const fakeDatabase = vi.hoisted(() => {
     const files = new Map<string, Record<string, unknown>>();
+    const tags = new Map<string, Record<string, unknown>>();
+    const fileTags = new Set<string>();
+    const tagMutations = new Map<string, Record<string, unknown>>();
 
     return {
         files,
+        tags,
+        fileTags,
+        tagMutations,
         execAsync: vi.fn(async () => undefined),
-        getAllAsync: vi.fn(async (query: string) => {
+        getAllAsync: vi.fn(async (query: string, params: unknown[] = []) => {
             if (query.includes('PRAGMA table_info')) {
                 return [{ name: 'conflict_json' }];
+            }
+            if (query.includes('FROM tag_mutations')) {
+                return [...tagMutations.values()];
+            }
+            if (query.includes('SELECT file_id, tag_id FROM file_tags')) {
+                return [...fileTags].map((pair) => {
+                    const [file_id, tag_id] = pair.split('|');
+                    return { file_id, tag_id };
+                });
+            }
+            if (query.includes('FROM tags')) {
+                if (query.includes('INNER JOIN file_tags')) {
+                    const fileId = String(params[0]);
+                    const tagIds = [...fileTags]
+                        .filter((pair) => pair.startsWith(`${fileId}|`))
+                        .map((pair) => pair.split('|')[1]);
+                    return tagIds.flatMap((id) => {
+                        const tag = tags.get(id);
+                        return tag ? [tag] : [];
+                    });
+                }
+                return [...tags.values()].map((tag) => ({
+                    ...tag,
+                    file_count: [...fileTags].filter((pair) => pair.endsWith(`|${tag.id}`)).length,
+                }));
             }
             const rows = [...files.values()];
             return query.includes('dirty = 1')
@@ -19,6 +50,37 @@ const fakeDatabase = vi.hoisted(() => {
         getFirstAsync: vi.fn(async (query: string, params: unknown[]) => {
             if (query.includes('FROM files')) {
                 return files.get(String(params[0])) ?? null;
+            }
+            if (query.includes('COUNT(*) AS count FROM tag_mutations')) {
+                const fileId = String(params[0]);
+                return {
+                    count: [...tagMutations.values()].filter(
+                        (mutation) => mutation.file_id === fileId
+                    ).length,
+                };
+            }
+            if (query.includes('COUNT(*) AS count FROM file_tags')) {
+                const tagId = String(params[0]);
+                return {
+                    count: [...fileTags].filter((pair) => pair.endsWith(`|${tagId}`)).length,
+                };
+            }
+            if (query.includes('FROM tags WHERE name')) {
+                const name = String(params[0]).toLowerCase();
+                return [...tags.values()].find(
+                    (tag) => String(tag.name).toLowerCase() === name
+                ) ?? null;
+            }
+            if (query.includes('FROM tag_mutations')) {
+                const [fileId, tagId] = params.map(String);
+                const operation = query.includes("operation = 'remove'")
+                    ? 'remove'
+                    : 'add';
+                return [...tagMutations.values()].find(
+                    (mutation) => mutation.file_id === fileId
+                        && mutation.tag_id === tagId
+                        && mutation.operation === operation
+                ) ?? null;
             }
             return null;
         }),
@@ -52,6 +114,49 @@ const fakeDatabase = vi.hoisted(() => {
                 });
             } else if (query.includes('DELETE FROM files')) {
                 files.delete(String(params[0]));
+            } else if (query.includes('INSERT INTO tags')) {
+                const [id, name] = params;
+                tags.set(String(id), {
+                    id,
+                    name,
+                    is_temporary: query.includes('VALUES (?, ?, 1)') ? 1 : 0,
+                });
+            } else if (query.includes('INSERT OR IGNORE INTO file_tags')) {
+                fileTags.add(`${params[0]}|${params[1]}`);
+            } else if (query.includes('DELETE FROM file_tags')) {
+                if (params.length === 2) {
+                    fileTags.delete(`${params[0]}|${params[1]}`);
+                } else {
+                    for (const pair of [...fileTags]) {
+                        if (pair.startsWith(`${params[0]}|`)) fileTags.delete(pair);
+                    }
+                }
+            } else if (query.includes('INSERT INTO tag_mutations')) {
+                const [id, fileId, tagId, tagName, createdAt] = params;
+                tagMutations.set(String(id), {
+                    id,
+                    file_id: fileId,
+                    tag_id: tagId,
+                    tag_name: tagName,
+                    operation: query.includes("'remove'") ? 'remove' : 'add',
+                    created_at: createdAt,
+                });
+            } else if (query.includes('DELETE FROM tag_mutations')) {
+                tagMutations.delete(String(params[0]));
+            } else if (query.includes('DELETE FROM tags')) {
+                tags.delete(String(params[0]));
+            } else if (query.includes('UPDATE file_tags SET file_id')) {
+                const [newId, oldId] = params.map(String);
+                for (const pair of [...fileTags]) {
+                    if (!pair.startsWith(`${oldId}|`)) continue;
+                    fileTags.delete(pair);
+                    fileTags.add(`${newId}|${pair.split('|')[1]}`);
+                }
+            } else if (query.includes('UPDATE tag_mutations SET file_id')) {
+                const [newId, oldId] = params.map(String);
+                for (const mutation of tagMutations.values()) {
+                    if (mutation.file_id === oldId) mutation.file_id = newId;
+                }
             }
         }),
     };
@@ -61,7 +166,7 @@ vi.mock('expo-sqlite', () => ({
     openDatabaseAsync: vi.fn(async () => fakeDatabase),
 }));
 
-import { dbFiles, initDb, type LocalFile } from '../db';
+import { dbFiles, dbTags, initDb, type LocalFile } from '../db';
 
 const localFile = (overrides: Partial<LocalFile> = {}): LocalFile => ({
     id: 'local-file',
@@ -96,6 +201,9 @@ const remoteFile = (
 describe('mobile file repository', () => {
     beforeEach(async () => {
         fakeDatabase.files.clear();
+        fakeDatabase.tags.clear();
+        fakeDatabase.fileTags.clear();
+        fakeDatabase.tagMutations.clear();
         vi.clearAllMocks();
         await initDb();
     });
@@ -176,5 +284,59 @@ describe('mobile file repository', () => {
             conflict_json: null,
             dirty: 0,
         });
+    });
+});
+
+describe('mobile tag repository', () => {
+    beforeEach(async () => {
+        fakeDatabase.files.clear();
+        fakeDatabase.tags.clear();
+        fakeDatabase.fileTags.clear();
+        fakeDatabase.tagMutations.clear();
+        vi.clearAllMocks();
+        await initDb();
+        await dbFiles.insert(localFile());
+    });
+
+    it('queues an offline tag addition and cancels it when removed', async () => {
+        const tag = await dbTags.addLocal(
+            'local-file',
+            'offline',
+            'temporary-tag',
+            'add-mutation'
+        );
+
+        await expect(dbTags.getForFile('local-file')).resolves.toMatchObject([
+            { id: 'temporary-tag', name: 'offline', is_temporary: 1 },
+        ]);
+        await expect(dbTags.getPendingMutations()).resolves.toMatchObject([
+            { operation: 'add', tag_name: 'offline' },
+        ]);
+
+        await dbTags.removeLocal('local-file', tag, 'remove-mutation');
+        await expect(dbTags.getForFile('local-file')).resolves.toEqual([]);
+        await expect(dbTags.getPendingMutations()).resolves.toEqual([]);
+    });
+
+    it('reconciles a temporary tag with the server tag', async () => {
+        await dbTags.addLocal(
+            'local-file',
+            'shared',
+            'temporary-tag',
+            'add-mutation'
+        );
+        const [mutation] = await dbTags.getPendingMutations();
+
+        await dbTags.markAddSynced(mutation, {
+            id: 'server-tag',
+            name: 'shared',
+            userId: 'user-1',
+            createdAt: '2026-01-01T00:00:00.000Z',
+        });
+
+        await expect(dbTags.getForFile('local-file')).resolves.toMatchObject([
+            { id: 'server-tag', name: 'shared', is_temporary: 0 },
+        ]);
+        await expect(dbTags.getPendingMutations()).resolves.toEqual([]);
     });
 });

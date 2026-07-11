@@ -72,6 +72,12 @@ export async function POST(
       update: {},
     });
 
+    // Touch the parent so incremental sync clients receive the tag relation.
+    await prisma.file.update({
+      where: { id: fileId },
+      data: { updatedAt: new Date() },
+    });
+
     return NextResponse.json({ tag }, { status: 201 });
   } catch (error) {
     console.error('Error adding tag to file:', error);

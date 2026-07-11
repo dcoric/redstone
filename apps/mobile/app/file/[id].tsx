@@ -17,13 +17,17 @@ import {
     useRouter,
 } from 'expo-router';
 import { Save, Trash2 } from 'lucide-react-native';
+import { Plus, X } from 'lucide-react-native';
 import Markdown from 'react-native-markdown-display';
+import * as Crypto from 'expo-crypto';
 import {
     dbFiles,
     dbFolders,
+    dbTags,
     type FileConflict,
     type LocalFile,
     type LocalFolder,
+    type LocalTag,
 } from '../../lib/db';
 import { flattenFolders } from '../../lib/folders';
 import { syncFiles } from '../../lib/sync';
@@ -36,6 +40,9 @@ export default function FileEditor() {
     const [content, setContent] = useState('');
     const [folders, setFolders] = useState<LocalFolder[]>([]);
     const [folderId, setFolderId] = useState<string | null>(null);
+    const [tags, setTags] = useState<LocalTag[]>([]);
+    const [tagInput, setTagInput] = useState('');
+    const [changingTags, setChangingTags] = useState(false);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [showPreview, setShowPreview] = useState(false);
@@ -49,9 +56,10 @@ export default function FileEditor() {
 
     const loadFile = useCallback(async () => {
         if (!id) return;
-        const [localFile, localFolders] = await Promise.all([
+        const [localFile, localFolders, localTags] = await Promise.all([
             dbFiles.getById(id),
             dbFolders.getAll(),
+            dbTags.getForFile(id),
         ]);
         if (!localFile) {
             bypassNavigationGuard.current = true;
@@ -60,6 +68,7 @@ export default function FileEditor() {
         }
         setFile(localFile);
         setFolders(localFolders);
+        setTags(localTags);
         setConflict(await dbFiles.getConflict(id));
         setTitle(localFile.title);
         setContent(localFile.content);
@@ -147,6 +156,46 @@ export default function FileEditor() {
             setSyncMessage('Server version restored');
         }
         await loadFile();
+    };
+
+    const addTag = async () => {
+        if (!id || !tagInput.trim()) return;
+        setChangingTags(true);
+        try {
+            await dbTags.addLocal(
+                id,
+                tagInput,
+                Crypto.randomUUID(),
+                Crypto.randomUUID()
+            );
+            setTagInput('');
+            setTags(await dbTags.getForFile(id));
+            const result = await syncFiles();
+            setSyncMessage(
+                result.status === 'offline' ? 'Tag saved offline' : 'Tags synced'
+            );
+            setTags(await dbTags.getForFile(id));
+        } finally {
+            setChangingTags(false);
+        }
+    };
+
+    const removeTag = async (tag: LocalTag) => {
+        if (!id) return;
+        setChangingTags(true);
+        try {
+            await dbTags.removeLocal(id, tag, Crypto.randomUUID());
+            setTags(await dbTags.getForFile(id));
+            const result = await syncFiles();
+            setSyncMessage(
+                result.status === 'offline'
+                    ? 'Tag removal saved offline'
+                    : 'Tags synced'
+            );
+            setTags(await dbTags.getForFile(id));
+        } finally {
+            setChangingTags(false);
+        }
     };
 
     if (loading || !file) {
@@ -266,6 +315,48 @@ export default function FileEditor() {
                         </TouchableOpacity>
                     ))}
                 </ScrollView>
+                <Text className="mb-2 text-xs font-medium uppercase tracking-wide text-gray-500">
+                    Tags
+                </Text>
+                <View className="mb-3 flex-row flex-wrap gap-2">
+                    {tags.map((tag) => (
+                        <View
+                            key={tag.id}
+                            className="flex-row items-center gap-1 rounded-full bg-violet-100 px-2.5 py-1"
+                        >
+                            <Text className="text-violet-800">#{tag.name}</Text>
+                            <TouchableOpacity
+                                onPress={() => void removeTag(tag)}
+                                disabled={changingTags}
+                                accessibilityLabel={`Remove tag ${tag.name}`}
+                            >
+                                <X size={14} color="#6d28d9" />
+                            </TouchableOpacity>
+                        </View>
+                    ))}
+                </View>
+                <View className="mb-5 flex-row items-center gap-2">
+                    <TextInput
+                        className="flex-1 rounded-lg bg-gray-100 px-3 py-2 text-gray-900"
+                        placeholder="Add a tag"
+                        value={tagInput}
+                        onChangeText={setTagInput}
+                        onSubmitEditing={() => void addTag()}
+                        autoCapitalize="none"
+                    />
+                    <TouchableOpacity
+                        className="rounded-lg bg-violet-600 p-2.5"
+                        onPress={() => void addTag()}
+                        disabled={changingTags || !tagInput.trim()}
+                        accessibilityLabel="Add tag"
+                    >
+                        {changingTags ? (
+                            <ActivityIndicator size="small" color="white" />
+                        ) : (
+                            <Plus size={18} color="white" />
+                        )}
+                    </TouchableOpacity>
+                </View>
                 {showPreview ? (
                     <View>
                         <Text className="mb-4 text-2xl font-bold text-gray-900">

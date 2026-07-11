@@ -1,6 +1,6 @@
 import * as Network from 'expo-network';
-import { dbFiles, dbFolders, syncState } from './db';
-import { ApiClientError, filesApi, syncApi } from './api-client';
+import { dbFiles, dbFolders, dbTags, syncState } from './db';
+import { ApiClientError, filesApi, syncApi, tagsApi } from './api-client';
 import type { FileWithRelations } from './types';
 
 const FILE_SYNC_CURSOR = 'files_and_folders_cursor';
@@ -68,6 +68,25 @@ export const syncFiles = async (): Promise<SyncResult> => {
             }
             const message = error instanceof Error ? error.message : String(error);
             errors.push(`Failed to push file ${file.id}: ${message}`);
+        }
+    }
+
+    const tagMutations = await dbTags.getPendingMutations();
+    for (const mutation of tagMutations) {
+        try {
+            if (mutation.operation === 'add') {
+                const response = await tagsApi.addToFile(
+                    mutation.file_id,
+                    mutation.tag_name
+                );
+                await dbTags.markAddSynced(mutation, response.tag);
+            } else {
+                await tagsApi.removeFromFile(mutation.file_id, mutation.tag_id);
+                await dbTags.markRemoveSynced(mutation.id);
+            }
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            errors.push(`Failed to sync tag ${mutation.tag_name}: ${message}`);
         }
     }
 

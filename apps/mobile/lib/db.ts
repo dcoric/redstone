@@ -1,5 +1,5 @@
 import * as SQLite from 'expo-sqlite';
-import type { FileWithRelations, Folder } from './types';
+import type { FileWithRelations, Folder, Tag } from './types';
 
 export interface LocalFile {
     id: string;
@@ -28,6 +28,27 @@ export interface LocalFolder {
     deleted_at: string | null;
     last_synced: string | null;
     dirty: number;
+}
+
+export interface LocalTag {
+    id: string;
+    name: string;
+    is_temporary: number;
+    file_count?: number;
+}
+
+export interface LocalFileTag {
+    file_id: string;
+    tag_id: string;
+}
+
+export interface LocalTagMutation {
+    id: string;
+    file_id: string;
+    tag_id: string;
+    tag_name: string;
+    operation: 'add' | 'remove';
+    created_at: string;
 }
 
 let db: SQLite.SQLiteDatabase | null = null;
@@ -72,6 +93,30 @@ export const initDb = async () => {
         CREATE TABLE IF NOT EXISTS sync_state (
           key TEXT PRIMARY KEY NOT NULL,
           value TEXT
+        );
+
+        CREATE TABLE IF NOT EXISTS tags (
+          id TEXT PRIMARY KEY NOT NULL,
+          name TEXT NOT NULL COLLATE NOCASE,
+          is_temporary INTEGER NOT NULL DEFAULT 0
+        );
+
+        CREATE UNIQUE INDEX IF NOT EXISTS tags_name_unique
+          ON tags(name COLLATE NOCASE);
+
+        CREATE TABLE IF NOT EXISTS file_tags (
+          file_id TEXT NOT NULL,
+          tag_id TEXT NOT NULL,
+          PRIMARY KEY (file_id, tag_id)
+        );
+
+        CREATE TABLE IF NOT EXISTS tag_mutations (
+          id TEXT PRIMARY KEY NOT NULL,
+          file_id TEXT NOT NULL,
+          tag_id TEXT NOT NULL,
+          tag_name TEXT NOT NULL,
+          operation TEXT NOT NULL,
+          created_at TEXT NOT NULL
         );
     `);
 
@@ -121,6 +166,29 @@ function remoteToLocalFile(file: FileWithRelations, syncedAt: string): LocalFile
         version_id: file.updatedAt,
         conflict_json: null,
     };
+}
+
+async function replaceRemoteFileTags(file: FileWithRelations) {
+    const database = await getDb();
+    const pending = await database.getFirstAsync<{ count: number }>(
+        'SELECT COUNT(*) AS count FROM tag_mutations WHERE file_id = ?',
+        [file.id]
+    );
+    if ((pending?.count ?? 0) > 0) return;
+
+    await database.runAsync('DELETE FROM file_tags WHERE file_id = ?', [file.id]);
+    for (const fileTag of file.tags ?? []) {
+        const tag = fileTag.tag;
+        await database.runAsync(
+            `INSERT INTO tags (id, name, is_temporary) VALUES (?, ?, 0)
+             ON CONFLICT(id) DO UPDATE SET name = excluded.name, is_temporary = 0`,
+            [tag.id, tag.name]
+        );
+        await database.runAsync(
+            'INSERT OR IGNORE INTO file_tags (file_id, tag_id) VALUES (?, ?)',
+            [file.id, tag.id]
+        );
+    }
 }
 
 export const dbFiles = {
@@ -184,6 +252,7 @@ export const dbFiles = {
             return true;
         }
         await writeFile(remoteToLocalFile(file, syncedAt));
+        await replaceRemoteFileTags(file);
         return true;
     },
 
@@ -194,9 +263,18 @@ export const dbFiles = {
     ) => {
         const database = await getDb();
         if (localId !== remoteFile.id) {
+            await database.runAsync(
+                'UPDATE file_tags SET file_id = ? WHERE file_id = ?',
+                [remoteFile.id, localId]
+            );
+            await database.runAsync(
+                'UPDATE tag_mutations SET file_id = ? WHERE file_id = ?',
+                [remoteFile.id, localId]
+            );
             await database.runAsync('DELETE FROM files WHERE id = ?', [localId]);
         }
         await writeFile(remoteToLocalFile(remoteFile, syncedAt));
+        await replaceRemoteFileTags(remoteFile);
     },
 
     applyRemoteDelete: async (id: string) => {
@@ -217,6 +295,8 @@ export const dbFiles = {
 
     deletePermanently: async (id: string) => {
         const database = await getDb();
+        await database.runAsync('DELETE FROM file_tags WHERE file_id = ?', [id]);
+        await database.runAsync('DELETE FROM tag_mutations WHERE file_id = ?', [id]);
         await database.runAsync('DELETE FROM files WHERE id = ?', [id]);
     },
 
@@ -264,6 +344,158 @@ export const dbFiles = {
                 remoteToLocalFile(conflict.file, new Date().toISOString())
             );
         }
+    },
+};
+
+export const dbTags = {
+    getAll: async (): Promise<LocalTag[]> => {
+        const database = await getDb();
+        return database.getAllAsync<LocalTag>(
+            `SELECT tags.id, tags.name, tags.is_temporary,
+                    COUNT(file_tags.file_id) AS file_count
+             FROM tags
+             LEFT JOIN file_tags ON file_tags.tag_id = tags.id
+             GROUP BY tags.id, tags.name, tags.is_temporary
+             ORDER BY tags.name ASC`
+        );
+    },
+
+    getForFile: async (fileId: string): Promise<LocalTag[]> => {
+        const database = await getDb();
+        return database.getAllAsync<LocalTag>(
+            `SELECT tags.id, tags.name, tags.is_temporary
+             FROM tags
+             INNER JOIN file_tags ON file_tags.tag_id = tags.id
+             WHERE file_tags.file_id = ?
+             ORDER BY tags.name ASC`,
+            [fileId]
+        );
+    },
+
+    getFileTags: async (): Promise<LocalFileTag[]> => {
+        const database = await getDb();
+        return database.getAllAsync<LocalFileTag>(
+            'SELECT file_id, tag_id FROM file_tags'
+        );
+    },
+
+    addLocal: async (
+        fileId: string,
+        tagName: string,
+        temporaryTagId: string,
+        mutationId: string
+    ) => {
+        const database = await getDb();
+        const normalizedName = tagName.trim();
+        const existing = await database.getFirstAsync<LocalTag>(
+            'SELECT id, name, is_temporary FROM tags WHERE name = ? COLLATE NOCASE',
+            [normalizedName]
+        );
+        const tag = existing ?? {
+            id: temporaryTagId,
+            name: normalizedName,
+            is_temporary: 1,
+        };
+
+        if (!existing) {
+            await database.runAsync(
+                'INSERT INTO tags (id, name, is_temporary) VALUES (?, ?, 1)',
+                [tag.id, tag.name]
+            );
+        }
+        await database.runAsync(
+            'INSERT OR IGNORE INTO file_tags (file_id, tag_id) VALUES (?, ?)',
+            [fileId, tag.id]
+        );
+
+        const pendingRemove = await database.getFirstAsync<LocalTagMutation>(
+            `SELECT * FROM tag_mutations
+             WHERE file_id = ? AND tag_id = ? AND operation = 'remove'`,
+            [fileId, tag.id]
+        );
+        if (pendingRemove) {
+            await database.runAsync('DELETE FROM tag_mutations WHERE id = ?', [pendingRemove.id]);
+        } else {
+            await database.runAsync(
+                `INSERT INTO tag_mutations
+                 (id, file_id, tag_id, tag_name, operation, created_at)
+                 VALUES (?, ?, ?, ?, 'add', ?)`,
+                [mutationId, fileId, tag.id, tag.name, new Date().toISOString()]
+            );
+        }
+        return tag;
+    },
+
+    removeLocal: async (fileId: string, tag: LocalTag, mutationId: string) => {
+        const database = await getDb();
+        await database.runAsync(
+            'DELETE FROM file_tags WHERE file_id = ? AND tag_id = ?',
+            [fileId, tag.id]
+        );
+
+        const pendingAdd = await database.getFirstAsync<LocalTagMutation>(
+            `SELECT * FROM tag_mutations
+             WHERE file_id = ? AND tag_id = ? AND operation = 'add'`,
+            [fileId, tag.id]
+        );
+        if (pendingAdd) {
+            await database.runAsync('DELETE FROM tag_mutations WHERE id = ?', [pendingAdd.id]);
+        } else if (tag.is_temporary === 0) {
+            await database.runAsync(
+                `INSERT INTO tag_mutations
+                 (id, file_id, tag_id, tag_name, operation, created_at)
+                 VALUES (?, ?, ?, ?, 'remove', ?)`,
+                [mutationId, fileId, tag.id, tag.name, new Date().toISOString()]
+            );
+        }
+
+        if (tag.is_temporary) {
+            const references = await database.getFirstAsync<{ count: number }>(
+                'SELECT COUNT(*) AS count FROM file_tags WHERE tag_id = ?',
+                [tag.id]
+            );
+            if ((references?.count ?? 0) === 0) {
+                await database.runAsync('DELETE FROM tags WHERE id = ?', [tag.id]);
+            }
+        }
+    },
+
+    getPendingMutations: async (): Promise<LocalTagMutation[]> => {
+        const database = await getDb();
+        return database.getAllAsync<LocalTagMutation>(
+            'SELECT * FROM tag_mutations ORDER BY created_at ASC'
+        );
+    },
+
+    markAddSynced: async (mutation: LocalTagMutation, remoteTag: Tag) => {
+        const database = await getDb();
+        if (mutation.tag_id !== remoteTag.id) {
+            await database.runAsync(
+                'DELETE FROM tags WHERE id = ? AND is_temporary = 1',
+                [mutation.tag_id]
+            );
+        }
+        await database.runAsync(
+            `INSERT INTO tags (id, name, is_temporary) VALUES (?, ?, 0)
+             ON CONFLICT(id) DO UPDATE SET name = excluded.name, is_temporary = 0`,
+            [remoteTag.id, remoteTag.name]
+        );
+        await database.runAsync(
+            'INSERT OR IGNORE INTO file_tags (file_id, tag_id) VALUES (?, ?)',
+            [mutation.file_id, remoteTag.id]
+        );
+        if (mutation.tag_id !== remoteTag.id) {
+            await database.runAsync(
+                'DELETE FROM file_tags WHERE file_id = ? AND tag_id = ?',
+                [mutation.file_id, mutation.tag_id]
+            );
+        }
+        await database.runAsync('DELETE FROM tag_mutations WHERE id = ?', [mutation.id]);
+    },
+
+    markRemoveSynced: async (mutationId: string) => {
+        const database = await getDb();
+        await database.runAsync('DELETE FROM tag_mutations WHERE id = ?', [mutationId]);
     },
 };
 

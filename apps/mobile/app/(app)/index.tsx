@@ -19,6 +19,8 @@ export default function FileList() {
     const {
         files,
         folders,
+        tags,
+        fileTags,
         loading,
         refreshing,
         refresh,
@@ -28,6 +30,7 @@ export default function FileList() {
     } = useFiles();
     const [query, setQuery] = useState('');
     const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
+    const [selectedTagId, setSelectedTagId] = useState<string | null>(null);
     const router = useRouter();
 
     useFocusEffect(
@@ -41,6 +44,19 @@ export default function FileList() {
         () => new Map(folders.map((folder) => [folder.id, folder.name])),
         [folders]
     );
+    const tagsByFile = useMemo(() => {
+        const tagNames = new Map(tags.map((tag) => [tag.id, tag.name]));
+        const result = new Map<string, string[]>();
+        for (const fileTag of fileTags) {
+            const name = tagNames.get(fileTag.tag_id);
+            if (!name) continue;
+            result.set(fileTag.file_id, [
+                ...(result.get(fileTag.file_id) ?? []),
+                name,
+            ]);
+        }
+        return result;
+    }, [fileTags, tags]);
     const filteredFiles = useMemo(() => {
         const normalizedQuery = query.trim().toLowerCase();
         return files.filter((file) => {
@@ -49,9 +65,14 @@ export default function FileList() {
             const matchesQuery = !normalizedQuery
                 || file.title.toLowerCase().includes(normalizedQuery)
                 || file.content.toLowerCase().includes(normalizedQuery);
-            return matchesFolder && matchesQuery;
+            const matchesTag = selectedTagId === null
+                || fileTags.some(
+                    (fileTag) => fileTag.file_id === file.id
+                        && fileTag.tag_id === selectedTagId
+                );
+            return matchesFolder && matchesQuery && matchesTag;
         });
-    }, [files, query, selectedFolderId]);
+    }, [fileTags, files, query, selectedFolderId, selectedTagId]);
 
     if (loading) {
         return (
@@ -149,6 +170,54 @@ export default function FileList() {
                         </TouchableOpacity>
                     ))}
                 </ScrollView>
+                {tags.length > 0 ? (
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        className="mt-2"
+                        contentContainerStyle={{ gap: 8 }}
+                    >
+                        <TouchableOpacity
+                            className={`rounded-full border px-3 py-1 ${
+                                selectedTagId === null
+                                    ? 'border-violet-600 bg-violet-600'
+                                    : 'border-violet-200 bg-white'
+                            }`}
+                            onPress={() => setSelectedTagId(null)}
+                        >
+                            <Text
+                                className={
+                                    selectedTagId === null
+                                        ? 'text-white'
+                                        : 'text-violet-700'
+                                }
+                            >
+                                All tags
+                            </Text>
+                        </TouchableOpacity>
+                        {tags.map((tag) => (
+                            <TouchableOpacity
+                                key={tag.id}
+                                className={`rounded-full border px-3 py-1 ${
+                                    selectedTagId === tag.id
+                                        ? 'border-violet-600 bg-violet-600'
+                                        : 'border-violet-200 bg-white'
+                                }`}
+                                onPress={() => setSelectedTagId(tag.id)}
+                            >
+                                <Text
+                                    className={
+                                        selectedTagId === tag.id
+                                            ? 'text-white'
+                                            : 'text-violet-700'
+                                    }
+                                >
+                                    #{tag.name} {tag.file_count ?? 0}
+                                </Text>
+                            </TouchableOpacity>
+                        ))}
+                    </ScrollView>
+                ) : null}
             </View>
 
             <FlatList
@@ -162,6 +231,7 @@ export default function FileList() {
                                 ? folderNames.get(item.folder_id)
                                 : undefined
                         }
+                        tagNames={tagsByFile.get(item.id) ?? []}
                     />
                 )}
                 contentContainerStyle={{ padding: 16, flexGrow: 1 }}
@@ -172,7 +242,7 @@ export default function FileList() {
                     <View className="flex-1 items-center justify-center">
                         <Text className="text-lg text-gray-500">No files found</Text>
                         <Text className="mt-2 text-sm text-gray-400">
-                            {query || selectedFolderId
+                            {query || selectedFolderId || selectedTagId
                                 ? 'Try another search or folder.'
                                 : 'Create a new file to get started.'}
                         </Text>

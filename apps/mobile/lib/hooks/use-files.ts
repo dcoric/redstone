@@ -2,9 +2,12 @@ import { useState, useEffect, useCallback } from 'react';
 import {
     dbFiles,
     dbFolders,
+    dbTags,
     initDb,
     type LocalFile,
     type LocalFolder,
+    type LocalTag,
+    type LocalFileTag,
 } from '../db';
 import { syncFiles, type SyncResult } from '../sync';
 
@@ -13,6 +16,8 @@ type SyncStatus = SyncResult['status'] | 'idle' | 'syncing';
 export function useFiles() {
     const [files, setFiles] = useState<LocalFile[]>([]);
     const [folders, setFolders] = useState<LocalFolder[]>([]);
+    const [tags, setTags] = useState<LocalTag[]>([]);
+    const [fileTags, setFileTags] = useState<LocalFileTag[]>([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle');
@@ -20,12 +25,16 @@ export function useFiles() {
 
     const loadFiles = useCallback(async () => {
         try {
-            const [localFiles, localFolders] = await Promise.all([
+            const [localFiles, localFolders, localTags, localFileTags] = await Promise.all([
                 dbFiles.getAll(),
                 dbFolders.getAll(),
+                dbTags.getAll(),
+                dbTags.getFileTags(),
             ]);
             setFiles(localFiles);
             setFolders(localFolders);
+            setTags(localTags);
+            setFileTags(localFileTags);
         } catch (error) {
             console.error('Failed to load local files', error);
         } finally {
@@ -70,6 +79,8 @@ export function useFiles() {
     return {
         files,
         folders,
+        tags,
+        fileTags,
         loading,
         refreshing,
         refresh,

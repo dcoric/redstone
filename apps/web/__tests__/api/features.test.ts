@@ -49,6 +49,7 @@ describe('tags API', () => {
     const initial = await readJson<{ tags: { name: string }[] }>(initialResponse);
     expect(initial.tags.some((tag) => tag.name === 'welcome')).toBe(true);
 
+    const syncCursor = new Date(Date.now() - 1000).toISOString();
     const tagName = `vitest-${Date.now()}`;
     const addResponse = await addTagPOST(
       apiRequest(`/api/files/${welcomeFileId}/tags`, {
@@ -61,6 +62,24 @@ describe('tags API', () => {
     expect(addResponse.status).toBe(201);
     const added = await readJson<{ tag: { id: string; name: string } }>(addResponse);
     expect(added.tag.name).toBe(tagName);
+
+    const syncResponse = await syncGET(
+      apiRequest(`/api/sync?since=${encodeURIComponent(syncCursor)}`, {
+        token: authToken,
+      })
+    );
+    const changes = await readJson<{
+      files: {
+        upserted: Array<{
+          id: string;
+          tags: Array<{ tag: { name: string } }>;
+        }>;
+      };
+    }>(syncResponse);
+    const changedFile = changes.files.upserted.find(
+      (file) => file.id === welcomeFileId
+    );
+    expect(changedFile?.tags.some((fileTag) => fileTag.tag.name === tagName)).toBe(true);
 
     const removeResponse = await removeTagDELETE(
       apiRequest(`/api/files/${welcomeFileId}/tags/${added.tag.id}`, {

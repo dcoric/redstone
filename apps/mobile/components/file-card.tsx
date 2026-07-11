@@ -6,9 +6,10 @@ import type { LocalFile } from '../lib/db';
 interface FileCardProps {
     file: LocalFile;
     folderName?: string;
+    tagNames?: string[];
 }
 
-export default function FileCard({ file, folderName }: FileCardProps) {
+export default function FileCard({ file, folderName, tagNames = [] }: FileCardProps) {
     const router = useRouter();
 
     return (
@@ -48,6 +49,18 @@ export default function FileCard({ file, folderName }: FileCardProps) {
                         </View>
                     ) : null}
                 </View>
+                {tagNames.length > 0 ? (
+                    <View className="mt-2 flex-row gap-1">
+                        {tagNames.slice(0, 3).map((name) => (
+                            <Text
+                                key={name}
+                                className="rounded bg-violet-50 px-1.5 py-0.5 text-xs text-violet-700"
+                            >
+                                #{name}
+                            </Text>
+                        ))}
+                    </View>
+                ) : null}
             </View>
         </TouchableOpacity>
     );
