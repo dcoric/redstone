@@ -55,6 +55,12 @@ export async function DELETE(
       },
     });
 
+    // Touch the parent so incremental sync clients receive the tag removal.
+    await prisma.file.update({
+      where: { id: fileId },
+      data: { updatedAt: new Date() },
+    });
+
     return NextResponse.json({ message: 'Tag removed from file' });
   } catch (error) {
     console.error('Error removing tag from file:', error);

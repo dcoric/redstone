@@ -24,40 +24,62 @@ import type {
     UpdateFolderRequest,
     FilesListParams,
     ApiError,
+    SyncResponse,
+    CurrentUserResponse,
+    User,
 } from './types';
 
 // Detect if running on emulator/device for localhost
 // Android Emulator uses 10.0.2.2 for localhost
-const LOCAHOST_URL = Platform.OS === 'android' ? 'http://10.0.2.2:3000/api' : 'http://localhost:3000/api';
-// TODO: Replace with environment variable or production URL
-const API_BASE_URL = LOCAHOST_URL;
+const LOCALHOST_URL = Platform.OS === 'android'
+    ? 'http://10.0.2.2:3000/api'
+    : 'http://localhost:3000/api';
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL?.replace(/\/$/, '') ?? LOCALHOST_URL;
 
-const TOKEN_KEY = 'redstone_jwt_token';
+const SESSION_KEY = 'redstone_auth_session';
+
+export interface AuthSession {
+    token: string;
+    user: User;
+}
+
+export class ApiClientError extends Error {
+    constructor(
+        message: string,
+        public readonly status: number,
+        public readonly details?: unknown
+    ) {
+        super(message);
+        this.name = 'ApiClientError';
+    }
+}
+
+let unauthorizedHandler: (() => void) | null = null;
+
+export function setUnauthorizedHandler(handler: (() => void) | null) {
+    unauthorizedHandler = handler;
+}
 
 /**
  * Token management
  */
-export const tokenStorage = {
-    get: async () => {
+export const sessionStorage = {
+    get: async (): Promise<AuthSession | null> => {
+        const value = await SecureStore.getItemAsync(SESSION_KEY);
+        if (!value) return null;
+
         try {
-            return await SecureStore.getItemAsync(TOKEN_KEY);
+            return JSON.parse(value) as AuthSession;
         } catch {
+            await SecureStore.deleteItemAsync(SESSION_KEY);
             return null;
         }
     },
-    set: async (token: string) => {
-        try {
-            await SecureStore.setItemAsync(TOKEN_KEY, token);
-        } catch {
-            // ignore
-        }
+    set: async (session: AuthSession) => {
+        await SecureStore.setItemAsync(SESSION_KEY, JSON.stringify(session));
     },
     remove: async () => {
-        try {
-            await SecureStore.deleteItemAsync(TOKEN_KEY);
-        } catch {
-            // ignore
-        }
+        await SecureStore.deleteItemAsync(SESSION_KEY);
     },
 };
 
@@ -69,15 +91,15 @@ async function apiFetch<T>(
     options: RequestInit = {}
 ): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
-    const token = await tokenStorage.get();
+    const session = await sessionStorage.get();
 
     const headers: Record<string, string> = {
         'Content-Type': 'application/json',
         ...(options.headers as Record<string, string>),
     };
 
-    if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
+    if (session?.token) {
+        headers['Authorization'] = `Bearer ${session.token}`;
     }
 
     try {
@@ -87,20 +109,21 @@ async function apiFetch<T>(
         });
 
         if (!response.ok) {
-            // Handle 401 Unauthorized globally if needed (e.g. clear token)
             if (response.status === 401) {
-                // Option: emit event or just let caller handle
-                // For now, let's just throw
+                await sessionStorage.remove();
+                unauthorizedHandler?.();
             }
 
             let errorMessage = `HTTP error! status: ${response.status}`;
+            let errorDetails: unknown;
             try {
                 const errorData = await response.json() as ApiError;
                 errorMessage = errorData.error || errorMessage;
+                errorDetails = errorData;
             } catch {
                 // If JSON parsing fails, use the default error message
             }
-            throw new Error(errorMessage);
+            throw new ApiClientError(errorMessage, response.status, errorDetails);
         }
 
         const data = await response.json();
@@ -159,6 +182,7 @@ export const authApi = {
         apiPost<LoginResponse>('/auth/login', { email, password }),
     register: (email: string, password: string, name?: string) =>
         apiPost<RegisterResponse>('/auth/register', { email, password, name }),
+    me: () => apiGet<CurrentUserResponse>('/auth/me'),
 };
 
 /**
@@ -181,7 +205,12 @@ export const filesApi = {
         apiPost<FileResponse>('/files', data),
     update: (id: string, data: UpdateFileRequest) =>
         apiPut<FileResponse>(`/files/${id}`, data),
-    delete: (id: string) => apiDelete<SuccessResponse>(`/files/${id}`),
+    delete: (id: string, baseUpdatedAt?: string | null) => {
+        const query = baseUpdatedAt
+            ? `?baseUpdatedAt=${encodeURIComponent(baseUpdatedAt)}`
+            : '';
+        return apiDelete<SuccessResponse>(`/files/${id}${query}`);
+    },
     getVersions: (id: string) => apiGet<FileVersionsResponse>(`/files/${id}/versions`),
 };
 
@@ -215,4 +244,9 @@ export const tagsApi = {
 export const searchApi = {
     search: (query: string) =>
         apiGet<SearchResponse>(`/search?q=${encodeURIComponent(query)}`),
+};
+
+export const syncApi = {
+    pull: (since: string) =>
+        apiGet<SyncResponse>(`/sync?since=${encodeURIComponent(since)}`),
 };

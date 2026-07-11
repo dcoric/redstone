@@ -1,6 +1,5 @@
 import {
   autocompletion,
-  completeFromList,
   CompletionContext,
   CompletionSource,
 } from "@codemirror/autocomplete";

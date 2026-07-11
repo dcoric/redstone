@@ -43,7 +43,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: pnpm
 
       - name: Install dependencies
@@ -60,6 +60,9 @@ jobs:
 
       - name: Lint
         run: pnpm lint
+
+      - name: Type-check mobile
+        run: pnpm --filter mobile exec tsc --noEmit
 
       - name: Build
         run: pnpm build

@@ -67,7 +67,7 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { title, content, folderId } = body;
+    const { title, content, folderId, baseUpdatedAt } = body;
 
     // Check if file exists and belongs to user
     const existingFile = await prisma.file.findFirst({
@@ -80,6 +80,22 @@ export async function PUT(
 
     if (!existingFile) {
       return NextResponse.json({ error: 'File not found' }, { status: 404 });
+    }
+
+    if (baseUpdatedAt) {
+      const baseTimestamp = new Date(baseUpdatedAt);
+      if (Number.isNaN(baseTimestamp.getTime())) {
+        return NextResponse.json(
+          { error: 'baseUpdatedAt must be an ISO timestamp' },
+          { status: 400 }
+        );
+      }
+      if (baseTimestamp.getTime() !== existingFile.updatedAt.getTime()) {
+        return NextResponse.json(
+          { error: 'File changed on another device', currentFile: existingFile },
+          { status: 409 }
+        );
+      }
     }
 
     // Create a version if content changed
@@ -137,6 +153,7 @@ export async function DELETE(
 
   try {
     const { id } = await params;
+    const baseUpdatedAt = new URL(request.url).searchParams.get('baseUpdatedAt');
 
     // Check if file exists and belongs to user
     const existingFile = await prisma.file.findFirst({
@@ -149,6 +166,22 @@ export async function DELETE(
 
     if (!existingFile) {
       return NextResponse.json({ error: 'File not found' }, { status: 404 });
+    }
+
+    if (baseUpdatedAt) {
+      const baseTimestamp = new Date(baseUpdatedAt);
+      if (Number.isNaN(baseTimestamp.getTime())) {
+        return NextResponse.json(
+          { error: 'baseUpdatedAt must be an ISO timestamp' },
+          { status: 400 }
+        );
+      }
+      if (baseTimestamp.getTime() !== existingFile.updatedAt.getTime()) {
+        return NextResponse.json(
+          { error: 'File changed on another device', currentFile: existingFile },
+          { status: 409 }
+        );
+      }
     }
 
     // Soft delete

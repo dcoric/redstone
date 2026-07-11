@@ -57,7 +57,9 @@ describe('files API', () => {
     );
 
     expect(createResponse.status).toBe(201);
-    const created = await readJson<{ file: { id: string; title: string } }>(
+    const created = await readJson<{
+      file: { id: string; title: string; updatedAt: string };
+    }>(
       createResponse
     );
     const fileId = created.file.id;
@@ -72,11 +74,27 @@ describe('files API', () => {
       apiRequest(`/api/files/${fileId}`, {
         method: 'PUT',
         token: authToken,
-        body: jsonBody({ content: 'Updated content' }),
+        body: jsonBody({
+          content: 'Updated content',
+          baseUpdatedAt: created.file.updatedAt,
+        }),
       }),
       { params: Promise.resolve({ id: fileId }) }
     );
     expect(updateResponse.status).toBe(200);
+
+    const conflictResponse = await filePUT(
+      apiRequest(`/api/files/${fileId}`, {
+        method: 'PUT',
+        token: authToken,
+        body: jsonBody({
+          content: 'Stale offline edit',
+          baseUpdatedAt: '1970-01-01T00:00:00.000Z',
+        }),
+      }),
+      { params: Promise.resolve({ id: fileId }) }
+    );
+    expect(conflictResponse.status).toBe(409);
 
     const foldersResponse = await foldersGET(
       apiRequest('/api/folders', { token: authToken })

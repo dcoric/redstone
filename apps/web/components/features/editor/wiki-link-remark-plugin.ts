@@ -1,17 +1,14 @@
 import { visit } from "unist-util-visit";
 import type { Plugin } from "unified";
+import type { PhrasingContent, Root } from "mdast";
 
-interface WikiLinkOptions {
-  onLinkClick?: (title: string) => void;
-}
-
-const wikiLinkPlugin: Plugin<[WikiLinkOptions], any> = function () {
-  const transformer = (tree: any) => {
-    visit(tree, "text", (node: any, index, parent) => {
-      if (!parent || !index) return;
+const wikiLinkPlugin: Plugin<[], Root> = function () {
+  return (tree) => {
+    visit(tree, "text", (node, index, parent) => {
+      if (!parent || index === undefined) return;
 
       const value = node.value;
-      const parts: any[] = [];
+      const parts: PhrasingContent[] = [];
       const regex = /\[\[([^\]]+)\]\]/g;
       let lastIndex = 0;
       let match;
@@ -49,8 +46,6 @@ const wikiLinkPlugin: Plugin<[WikiLinkOptions], any> = function () {
       }
     });
   };
-
-  return transformer;
 };
 
 export default wikiLinkPlugin;

@@ -32,8 +32,9 @@ export async function GET(request: NextRequest) {
     });
 
     // Build tree structure
-    // Build tree structure
-    type FolderWithChildren = (typeof folders)[number] & { children: any[] };
+    type FolderWithChildren = (typeof folders)[number] & {
+      children: FolderWithChildren[];
+    };
     const folderMap = new Map<string, FolderWithChildren>();
 
     folders.forEach((f) => {

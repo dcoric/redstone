@@ -5,6 +5,8 @@
     "dev": "turbo run dev",
     "dev:web": "turbo run dev --filter=web",
     "dev:mobile": "turbo run dev --filter=mobile",
+    "dev:desktop": "pnpm --filter desktop start",
+    "make:desktop": "pnpm --filter desktop make",
     "build": "turbo run build",
     "test": "turbo run test",
     "lint": "turbo run lint",
@@ -19,5 +21,12 @@
     "node": ">=18.0.0",
     "pnpm": ">=8.0.0"
   },
-  "packageManager": "pnpm@10.18.2"
+  "packageManager": "pnpm@10.18.2",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "electron",
+      "electron-winstaller",
+      "esbuild"
+    ]
+  }
 }

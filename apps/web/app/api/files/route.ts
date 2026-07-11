@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@redstone/database';
+import { prisma, Prisma } from '@redstone/database';
 import { getUserId } from '@/lib/api-middleware';
 import { broadcast } from '@/lib/event-stream';
 
@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50');
     const skip = (page - 1) * limit;
 
-    const where: any = {
+    const where: Prisma.FileWhereInput = {
       userId,
       deletedAt: null,
     };

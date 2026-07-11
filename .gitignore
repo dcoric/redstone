@@ -20,3 +20,5 @@ pnpm-debug.log*
 *.local
 *.tsbuildinfo
 .stitch-export
+/apps/desktop/.vite
+/apps/desktop/out

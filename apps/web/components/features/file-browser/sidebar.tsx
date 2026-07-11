@@ -404,7 +404,7 @@ function FolderItem({
     const isEditing = editingFolderId === folder.id
     const renameTriggeredRef = React.useRef(false)
 
-    const handleClick = (e: React.MouseEvent) => {
+    const handleClick = (e: React.SyntheticEvent<HTMLElement>) => {
         // Don't select if clicking on menu button
         if ((e.target as HTMLElement).closest('[data-menu-trigger]')) {
             return
@@ -448,7 +448,7 @@ function FolderItem({
                     onKeyDown={(e) => {
                         if (e.key === 'Enter' || e.key === ' ') {
                             e.preventDefault()
-                            handleClick(e as any)
+                            handleClick(e)
                         }
                     }}
                     className="flex flex-1 items-center min-w-0"

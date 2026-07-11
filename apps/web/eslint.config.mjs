@@ -7,10 +7,9 @@ const eslintConfig = defineConfig([
   ...nextTs,
   {
     rules: {
-      // Treat as warnings until legacy Phase 6 UI is cleaned up (see PLAN.md hardening).
-      "@typescript-eslint/no-explicit-any": "warn",
-      "react/no-unescaped-entities": "warn",
-      "@typescript-eslint/no-empty-object-type": "warn",
+      "@typescript-eslint/no-explicit-any": "error",
+      "react/no-unescaped-entities": "error",
+      "@typescript-eslint/no-empty-object-type": "error",
     },
   },
   // Override default ignores of eslint-config-next.

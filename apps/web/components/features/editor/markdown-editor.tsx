@@ -6,6 +6,7 @@ import { markdown, markdownLanguage } from "@codemirror/lang-markdown"
 import { languages } from "@codemirror/language-data"
 import { oneDark } from "@codemirror/theme-one-dark"
 import { vim } from "@replit/codemirror-vim"
+import type { Extension } from "@codemirror/state"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import rehypeRaw from "rehype-raw"
@@ -34,7 +35,7 @@ export function MarkdownEditor({
     vimMode = false,
 }: MarkdownEditorProps) {
     const [content, setContent] = React.useState(initialContent)
-    const [isPreview, setIsPreview] = React.useState(false)
+    const [isPreview] = React.useState(false)
 
     React.useEffect(() => {
         setContent(initialContent)
@@ -49,7 +50,7 @@ export function MarkdownEditor({
     )
 
     const extensions = React.useMemo(() => {
-        const exts: any[] = [
+        const exts: Extension[] = [
             markdown({ base: markdownLanguage, codeLanguages: languages }),
         ]
         if (files.length > 0) {

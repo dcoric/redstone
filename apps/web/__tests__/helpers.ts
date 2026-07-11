@@ -13,12 +13,13 @@ export function apiRequest(
     mergedHeaders.set('Authorization', `Bearer ${token}`);
   }
 
-  if (rest.body && !mergedHeaders.has('Content-Type')) {
+  if (typeof rest.body === 'string' && !mergedHeaders.has('Content-Type')) {
     mergedHeaders.set('Content-Type', 'application/json');
   }
 
   return new NextRequest(`${BASE_URL}${path}`, {
     ...rest,
+    signal: rest.signal ?? undefined,
     headers: mergedHeaders,
   });
 }
