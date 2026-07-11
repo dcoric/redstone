@@ -287,6 +287,13 @@ async function writeFolder(folder: LocalFolder) {
 }
 
 export const dbFolders = {
+    getAll: async (): Promise<LocalFolder[]> => {
+        const database = await getDb();
+        return database.getAllAsync<LocalFolder>(
+            'SELECT * FROM folders WHERE deleted_at IS NULL ORDER BY name ASC'
+        );
+    },
+
     getById: async (id: string): Promise<LocalFolder | null> => {
         const database = await getDb();
         return database.getFirstAsync<LocalFolder>(

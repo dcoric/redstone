@@ -18,7 +18,14 @@ import {
 } from 'expo-router';
 import { Save, Trash2 } from 'lucide-react-native';
 import Markdown from 'react-native-markdown-display';
-import { dbFiles, type FileConflict, type LocalFile } from '../../lib/db';
+import {
+    dbFiles,
+    dbFolders,
+    type FileConflict,
+    type LocalFile,
+    type LocalFolder,
+} from '../../lib/db';
+import { flattenFolders } from '../../lib/folders';
 import { syncFiles } from '../../lib/sync';
 
 export default function FileEditor() {
@@ -27,6 +34,8 @@ export default function FileEditor() {
     const [conflict, setConflict] = useState<FileConflict | null>(null);
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
+    const [folders, setFolders] = useState<LocalFolder[]>([]);
+    const [folderId, setFolderId] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [showPreview, setShowPreview] = useState(false);
@@ -34,20 +43,27 @@ export default function FileEditor() {
     const bypassNavigationGuard = useRef(false);
     const router = useRouter();
     const navigation = useNavigation();
-    const hasChanges = title !== file?.title || content !== file?.content;
+    const hasChanges = title !== file?.title
+        || content !== file?.content
+        || folderId !== file?.folder_id;
 
     const loadFile = useCallback(async () => {
         if (!id) return;
-        const localFile = await dbFiles.getById(id);
+        const [localFile, localFolders] = await Promise.all([
+            dbFiles.getById(id),
+            dbFolders.getAll(),
+        ]);
         if (!localFile) {
             bypassNavigationGuard.current = true;
             router.replace('/(app)/');
             return;
         }
         setFile(localFile);
+        setFolders(localFolders);
         setConflict(await dbFiles.getConflict(id));
         setTitle(localFile.title);
         setContent(localFile.content);
+        setFolderId(localFile.folder_id);
         setLoading(false);
     }, [id, router]);
 
@@ -88,6 +104,7 @@ export default function FileEditor() {
             await dbFiles.updateLocal(id, {
                 title: title.trim(),
                 content,
+                folder_id: folderId,
             });
             setSyncMessage('Saved locally');
             const result = await syncFiles();
@@ -210,6 +227,45 @@ export default function FileEditor() {
                         {syncMessage ?? 'Pending sync'}
                     </Text>
                 ) : null}
+                <Text className="mb-2 text-xs font-medium uppercase tracking-wide text-gray-500">
+                    Folder
+                </Text>
+                <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    className="mb-4"
+                    contentContainerStyle={{ gap: 8 }}
+                >
+                    <TouchableOpacity
+                        className={`rounded-full px-3 py-1.5 ${
+                            folderId === null ? 'bg-blue-600' : 'bg-gray-100'
+                        }`}
+                        onPress={() => setFolderId(null)}
+                    >
+                        <Text className={folderId === null ? 'text-white' : 'text-gray-700'}>
+                            No folder
+                        </Text>
+                    </TouchableOpacity>
+                    {flattenFolders(folders).map(({ folder, depth }) => (
+                        <TouchableOpacity
+                            key={folder.id}
+                            className={`rounded-full px-3 py-1.5 ${
+                                folderId === folder.id ? 'bg-blue-600' : 'bg-gray-100'
+                            }`}
+                            onPress={() => setFolderId(folder.id)}
+                        >
+                            <Text
+                                className={
+                                    folderId === folder.id
+                                        ? 'text-white'
+                                        : 'text-gray-700'
+                                }
+                            >
+                                {'› '.repeat(depth)}{folder.name}
+                            </Text>
+                        </TouchableOpacity>
+                    ))}
+                </ScrollView>
                 {showPreview ? (
                     <View>
                         <Text className="mb-4 text-2xl font-bold text-gray-900">

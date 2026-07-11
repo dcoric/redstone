@@ -1,13 +1,14 @@
 import { View, Text, TouchableOpacity } from 'react-native';
-import { Clock3, FileText, TriangleAlert } from 'lucide-react-native';
+import { Clock3, FileText, Folder, TriangleAlert } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import type { LocalFile } from '../lib/db';
 
 interface FileCardProps {
     file: LocalFile;
+    folderName?: string;
 }
 
-export default function FileCard({ file }: FileCardProps) {
+export default function FileCard({ file, folderName }: FileCardProps) {
     const router = useRouter();
 
     return (
@@ -29,6 +30,12 @@ export default function FileCard({ file }: FileCardProps) {
                     <Text className="text-xs text-gray-500">
                         {new Date(file.updated_at).toLocaleDateString()}
                     </Text>
+                    {folderName ? (
+                        <View className="flex-row items-center gap-1 rounded bg-blue-50 px-2 py-0.5">
+                            <Folder size={10} color="#2563eb" />
+                            <Text className="text-xs text-blue-700">{folderName}</Text>
+                        </View>
+                    ) : null}
                     {file.conflict_json ? (
                         <View className="flex-row items-center gap-1 rounded bg-amber-100 px-2 py-0.5">
                             <TriangleAlert size={10} color="#b45309" />
