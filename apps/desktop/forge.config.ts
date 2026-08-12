@@ -22,8 +22,21 @@ const config: ForgeConfig = {
   makers: [
     new MakerSquirrel({ name: 'redstone' }),
     new MakerZIP({}, ['darwin']),
-    new MakerDeb({ options: { maintainer: 'Redstone', homepage: 'https://redstone.citadel.red' } }),
-    new MakerRpm({ options: { homepage: 'https://redstone.citadel.red' } }),
+    new MakerDeb({
+      options: {
+        name: 'redstone',
+        bin: 'redstone',
+        maintainer: 'Redstone',
+        homepage: 'https://redstone.citadel.red',
+      },
+    }),
+    new MakerRpm({
+      options: {
+        name: 'redstone',
+        bin: 'redstone',
+        homepage: 'https://redstone.citadel.red',
+      },
+    }),
   ],
   plugins: [
     new VitePlugin({
